@@ -41,10 +41,17 @@
     ],
     "languages": [
       {
-        "id": "z80|6502",
+        "id": "asm",
         "aliases": [ "assembly", "z80", "6502", "asm" ],
         "extensions": [ "asm" ],
         "configuration": "./media/language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "asm",
+        "scopeName": "source.asm",
+        "path": "./media/asm.tmGrammar.json"
       }
     ]
   },

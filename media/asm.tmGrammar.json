@@ -1,0 +1,289 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "floooh.kcide.asm",
+  "scopeName": "source.asm",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#mnemonics"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#includes"
+    },
+    {
+      "include": "#labels"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.z80asm",
+          "begin": ";",
+          "end": "\\n"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.z80asm",
+          "match": "(?i:(?<=\\s)(?:equ|eval|[fr]?org|end?t|align|(?:de|un)?phase|shift|save(?:bin|dev|hob|nex|sna|tap|trd)|empty(?:tap|trd)|inc(?:bin|hob|trd)|binclude|includelua|insert|binary|end|out(?:put|end)|tap(?:out|end)|fpos|fname|slot|size|opt)\\b)"
+        },
+        {
+          "name": "keyword.control.z80asm",
+          "match": "(?i:(?<=\\s)(?:cpu|device|proc|macro|label|local|global|shared|public|forward|rept|e?dup|block|end[mprsw]|exitm|module|endmod(?:ule)?|(?:un)?define|export|disp|textarea|map|mmu|field|defarray|segment|restore|pushv|popv|enum|enumconf|nextenum)\\b)"
+        },
+        {
+          "name": "keyword.control.z80asm",
+          "match": "(?i:(?<=\\s)(?:assert|fatal|error|warning|message|display|print|title|prtit|prtexit|fail|shellexec|def[bdghlmswir]|d[bcghmswz]|abyte[cz]?|byte|d?word|hex)\\b)"
+        },
+        {
+          "name": "keyword.control.z80asm",
+          "match": "(?i:(?<=\\s)(?:page|newpage|radix|outradix|encoding|charset|codepage|macexp_(?:dft|ovr)|listing|(?:end)?struct|(?:end)?section|maxnest)\\b)"
+        },
+        {
+          "name": "keyword.control.z80asm",
+          "match": "(?i:(?<=\\s)(?:if|ifn?def|ifn?used|ifn?exist|else|elseif|endif)\\b)"
+        },
+        {
+          "name": "keyword.control.z80asm",
+          "match": "(?i:(?<=\\s)(?:bank|bankset|limit|protect|write\\s+direct|str)\\b)"
+        },
+        {
+          "name": "keyword.control.z80asm",
+          "match": "(?i:(?<=\\s)(?:inc(?:l4[89]|lz4|zx7|exo)|lz(?:4[89]?|w7|exo|close)|read)\\b)"
+        },
+        {
+          "name": "keyword.control.z80asm",
+          "match": "(?i:(?<=\\s)(?:repeat|while|[rw]end|until|(?:end)?switch|(?:else|end)?case|default|break|stop|function)\\b)"
+        },
+        {
+          "name": "keyword.control.z80asm",
+          "match": "(?i:(?<=\\s)(?:amsdos|breakpoint|buildcpr|buildsna|run|save|setcpc|setcrtc)\\b)"
+        },
+        {
+          "name": "keyword.control.z80asm",
+          "match": "(?i:(?<=\\s)(?:list|nolist|let|labelslist|bplist|setbp|setbreakpoint|cspectmap)\\b)"
+        },
+        {
+          "name": "string.other.lua.z80asm",
+          "begin": "(?i:(?<=\\s)(lua)\\b)",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.z80asm"
+            }
+          },
+          "end": "(?i:(?<=\\s)(endlua)\\b)",
+          "endCaptures": {
+            "1": {
+              "name": "keyword.control.z80asm"
+            }
+          }
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "match": "(?i:(af'))",
+          "captures": {
+            "1": {
+              "name": "support.type.register.z80asm"
+            }
+          }
+        },
+        {
+          "name": "string.quoted.single.z80asm",
+          "begin": "'",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.begin.z80asm"
+            }
+          },
+          "end": "(\\')|((?:[^\\\\\\n])$)",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.string.end.z80asm"
+            },
+            "2": {
+              "name": "invalid.illegal.newline.z80asm"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#string-character-escape"
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.double.z80asm",
+          "begin": "\"",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.begin.z80asm"
+            }
+          },
+          "end": "(\")|((?:[^\\\\\\n])$)",
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.string.end.z80asm"
+            },
+            "2": {
+              "name": "invalid.illegal.newline.z80asm"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#string-character-escape"
+            }
+          ]
+        }
+      ]
+    },
+    "string-character-escape": {
+      "patterns": [
+        {
+          "name": "constant.character.escape.z80asm",
+          "match": "\\\\(x[0-9A-Fa-f]{2}|[0-2][0-7]{0,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.|$)"
+        }
+      ]
+    },
+    "mnemonics": {
+      "patterns": [
+        {
+          "name": "support.type.flag.z80asm",
+          "match": "\\b(?i:(j[pr]|call|ret))(?:\\s+(?i:([cmpz]|n[cz]|p[eo])))?\\b",
+          "captures": {
+            "1": {
+              "name": "keyword.mnemonic.z80asm"
+            },
+            "2": {
+              "name": "meta.preprocessor.flag.z80asm"
+            }
+          }
+        },
+        {
+          "name": "support.type.flag.z80asm",
+          "match": "\\b(?i:z80|r800|msx|gbz80|zxspectrum(?:48|128|256|512|1024)|(?:no)?(?:expand|expif|expmacro|export|intlabel|globalsymbols))\\b"
+        },
+        {
+          "name": "constant.numeric.operator.z80asm",
+          "match": "\\b(?i:high|low|not|mod|sh[lr])\\b",
+          "comment": "sjasm numeric operators"
+        },
+        {
+          "name": "constant.numeric.function.z80asm",
+          "match": "\\b(?i:sqrt|a?sinh?|a?cosh?|a?tanh?|a?coth?|exp|alog|a?ld|ln|log|int|bitcnt|firstbit|lastbit|bitpos|sgn|abs|toupper|tolower|upstring|lowstring|strlen|substr|charfromstr|strstr|val|exprtype)\\b",
+          "comment": "AS macroassembler functions"
+        },
+        {
+          "name": "keyword.mnemonic.z80asm",
+          "match": "\\s(?i:ad[cd]|and|bit|ccf|cp|cp[di]r?|cpl|daa|dec|[de]i|djnz|ex[adx]?|halt|i[mn]|inc|in[di]r?|ld|ld[di]r?|neg|nop|or|ot[di]r|out|out[di]|pop|push|res|ret[in]|rla?|rlca?|r[lr]d|rra?|rrca?|rst|sbc|scf|set|s[lr]a|s[lr]l|slia|sl1|sub|x?or)\\s"
+        },
+        {
+          "name": "keyword.mnemonic.z80asm",
+          "match": "\\s(?i:swap|ldir?x|ldws|lddr?x|ldpirx|outinb|swapnib|mul|mirror|nextreg|pixel(ad|dn)|setae|te?st|bs[lr]a|bsr[lf]|brlc)\\s"
+        },
+        {
+          "name": "support.type.register.z80asm",
+          "match": "\\b(?i:[abcdefhlir]|ix|iy|af'?|bc|de|hl|pc|sp|ix[hlu]|iy[hlu]|[lh]x|x[lh]|[lh]y|y[lh])\\b"
+        },
+        {
+          "name": "constant.language.operator.z80asm",
+          "match": "(?i:\\{(?:hex[248]?|bin(?:8|16|32)?|int|eval|r[bw])?\\})"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "invalid",
+          "match": "^\\{5}"
+        },
+        {
+          "name": "constant.numeric.integer.hexadecimal.z80asm",
+          "match": "[\\$#][0-9a-fA-F]+"
+        },
+        {
+          "name": "constant.numeric.integer.hexadecimal.z80asm",
+          "match": "(\\-?[0-9a-fA-F]+[hH])\\b"
+        },
+        {
+          "name": "constant.numeric.integer.hexadecimal.z80asm",
+          "match": "(\\-?0x[0-9a-fA-F]+)\\b"
+        },
+        {
+          "name": "constant.numeric.integer.octal.z80asm",
+          "match": "@[0-7]+"
+        },
+        {
+          "name": "constant.numeric.integer.octal.z80asm",
+          "match": "\\-?[0-7]+[oO]\\b"
+        },
+        {
+          "name": "constant.numeric.integer.octal.z80asm",
+          "match": "(\\-?0q?[0-7]+)\\b"
+        },
+        {
+          "name": "constant.numeric.integer.binary.z80asm",
+          "match": "%[01]+\\b"
+        },
+        {
+          "name": "constant.numeric.integer.binary.z80asm",
+          "match": "\\b[01]+[bB]\\b"
+        },
+        {
+          "name": "constant.numeric.integer.binary.z80asm",
+          "match": "(\\-?0b[01]+)\\b"
+        },
+        {
+          "name": "constant.numeric.integer.decimal.z80asm",
+          "match": "\\-?\\d+"
+        }
+      ]
+    },
+    "includes": {
+      "patterns": [
+        {
+          "match": "(?i:(?<=\\s)(include)\\s+(([\"'])(?:[^\\3]+)\\3))",
+          "captures": {
+            "1": {
+              "name": "keyword.control.z80asm"
+            },
+            "2": {
+              "name": "string.modifier.import.z80asm"
+            }
+          }
+        }
+      ]
+    },
+    "labels": {
+      "patterns": [
+        {
+          "match": "^\\@?((\\$\\$(?!\\.))?[\\w\\.]+):?(?=\\s)",
+          "captures": {
+            "1": {
+              "name": "entity.name.function.z80asm"
+            }
+          }
+        },
+        {
+          "match": "\\b([a-zA-Z][\\w\\.]+)\\b",
+          "name": "variable.parameter.label.z80asm"
+        }
+      ]
+    }
+  }
+}
