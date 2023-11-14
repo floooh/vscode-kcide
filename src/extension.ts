@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { start, assemble } from './kcide';
+import { start, build, check } from './kcide';
 
 export async function activate(ext: vscode.ExtensionContext) {
 
@@ -8,9 +8,13 @@ export async function activate(ext: vscode.ExtensionContext) {
 		const ctx = await start(ext);
 		console.log('vscode-kcide: started');
 
-		ext.subscriptions.push(vscode.commands.registerCommand('floooh.kcide.assemble', async () => {
-			await assemble(ext, ctx);
-		}));
+		const cmdBuild = vscode.commands.registerCommand('floooh.kcide.build', async() => {
+			await build(ctx);
+		});
+		const cmdCheck = vscode.commands.registerCommand('floooh.kcide.check', async() => {
+			await check(ctx);
+		});
+		ext.subscriptions.push(cmdBuild, cmdCheck);
 	} catch (err) {
 		vscode.window.showErrorMessage(`Failed to setup KCIDE extension (${(err as Error).message}`);
 	}

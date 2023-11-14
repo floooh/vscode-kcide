@@ -23,9 +23,14 @@
   "contributes": {
     "commands": [
       {
-        "command": "floooh.kcide.assemble",
+        "command": "floooh.kcide.build",
         "category": "KCIDE",
-        "title": "Assemble"
+        "title": "Build"
+      },
+      {
+        "command": "floooh.kcide.check",
+        "category": "KCIDE",
+        "title": "Check"
       }
     ],
     "jsonValidation": [

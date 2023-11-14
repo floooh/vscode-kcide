@@ -8,7 +8,6 @@ import {
     Diagnostic,
     DiagnosticSeverity,
     Range,
-    Terminal,
 } from 'vscode';
 import {
     RootFileSystem,
@@ -134,10 +133,6 @@ function getOutputListFileUri(ctx: Context, project: Project): Uri {
     return Uri.file(path.join(ensureBuildDir(ctx, project).fsPath, `${project.output.basename}.lst`));
 }
 
-function getOutputFileUri(ctx: Context, project: Project, filename: string): Uri {
-    return Uri.file(path.join(ensureBuildDir(ctx, project).fsPath, filename));
-}
-
 export async function start(ext: ExtensionContext): Promise<Context> {
     if (workspace.workspaceFolders === undefined) {
         throw new Error('Cannot determine project folder (workspace.workspaceFolders is undefined)');
@@ -151,36 +146,26 @@ export async function start(ext: ExtensionContext): Promise<Context> {
     return { projectUri, wasm, fs, diagnostics, asmx };
 }
 
-export async function runAsmx(ctx: Context, project: Project, args: string[]): Promise<RunResult> {
-    const stdoutUri = getOutputFileUri(ctx, project, 'stdout.txt');
-    const stderrUri = getOutputFileUri(ctx, project, 'stderr.txt');
-    try { await workspace.fs.delete(stdoutUri); } catch (err) {};
-    try { await workspace.fs.delete(stderrUri); } catch (err) {};
-    const [ stdoutWasmPath, stderrWasmPath ] = await Promise.all([
-        uriToWasmPath(ctx, stdoutUri),
-        uriToWasmPath(ctx, stderrUri)
-    ]);
+export async function runAsmx(ctx: Context, args: string[]): Promise<RunResult> {
     const process = await ctx.wasm.createProcess('asmx', ctx.asmx, {
         rootFileSystem: ctx.fs,
         stdio: {
-            out: { kind: 'file', path: stdoutWasmPath },
-            err: { kind: 'file', path: stderrWasmPath },
+            out: { kind: 'pipeOut' },
+            err: { kind: 'pipeOut' },
         },
         args,
     });
+    const decoder = new TextDecoder('utf-8');
+    let stderr = '';
+    let stdout = '';
+    process.stderr!.onData((data) => {
+        stderr += decoder.decode(data);
+    });
+    process.stdout!.onData((data) => {
+        stdout += decoder.decode(data);
+    });
     const exitCode = await process.run();
-    const result: RunResult = { exitCode };
-    try {
-        result.stdout = fs.readFileSync(stdoutUri.fsPath, { encoding: 'utf8' });
-    } catch (err) {
-        console.warn(`runAsmx(): failed to read ${stdoutUri.fsPath }`);
-    };
-    try {
-        result.stderr = fs.readFileSync(stderrUri.fsPath, { encoding: 'utf8' });
-    } catch (err) {
-        console.warn(`runAsmx(): failed to read ${stderrUri.fsPath }`);
-    };
-    return result;
+    return { exitCode, stdout, stderr };
 }
 
 function parseDiagnostics(ctx: Context, stderr: string | undefined): ReadonlyArray<[Uri, readonly Diagnostic[] | undefined]> {
@@ -199,28 +184,62 @@ function parseDiagnostics(ctx: Context, stderr: string | undefined): ReadonlyArr
     });
 }
 
-export async function assemble(_ext: ExtensionContext, ctx: Context) {
-    console.log('=> assemble:');
+interface AssembleOptions {
+    genListingFile: boolean,
+    genObjectFile: boolean,
+};
+
+interface AssembleResult {
+    listingUri?: Uri,
+    objectUri?: Uri,
+    stdout: string,
+    stderr: string,
+    exitCode: number,
+};
+
+async function assemble(ctx: Context, options: AssembleOptions): Promise<AssembleResult> {
+    const { genListingFile, genObjectFile } = options;
+    const project = loadProject(ctx);
+    const mainSrcUri = getMainSourceUri(ctx, project);
+    if (mainSrcUri === undefined) {
+        throw new Error(`Project main file '${project.mainFile}' not found!`);
+    }
+    const lstUri = getOutputListFileUri(ctx, project);
+    const objUri = getOutputObjectFileUri(ctx, project);
+    const [ srcPath, objPath, lstPath ] = await Promise.all([
+        uriToWasmPath(ctx, mainSrcUri),
+        uriToWasmPath(ctx, objUri),
+        uriToWasmPath(ctx, lstUri),
+    ]);
+    const stdArgs = [ '-w', '-e', '-C', project.cpu, srcPath ];
+    const lstArgs = genListingFile ? [ '-l', lstPath ] : [];
+    const objArgs = genObjectFile ? [ '-o', objPath ] : [];
+    const result = await runAsmx(ctx, [ ...lstArgs, ...objArgs, ...stdArgs ]);
+    return {
+        listingUri: genListingFile ? lstUri: undefined,
+        objectUri: genObjectFile ? objUri : undefined,
+        stdout: result.stdout ?? '',
+        stderr: result.stderr ?? '',
+        exitCode: result.exitCode,
+    }
+}
+
+export async function build(ctx: Context) {
     try {
+        const result = await assemble(ctx, { genListingFile: true, genObjectFile: true });
         ctx.diagnostics.clear();
-        const project = loadProject(ctx);
-        console.log(`=> assemble: project file loaded: ${JSON.stringify(project, null, 2)}`);
-        const mainSrcUri = getMainSourceUri(ctx, project);
-        if (mainSrcUri === undefined) {
-            window.showErrorMessage(`Project main file '${project.mainFile}' not found!`);
-            return;
-        }
-        const [ srcPath, objPath, lstPath ] = await Promise.all([
-            uriToWasmPath(ctx, mainSrcUri),
-            uriToWasmPath(ctx, getOutputObjectFileUri(ctx, project)),
-            uriToWasmPath(ctx, getOutputListFileUri(ctx, project)),
-        ]);
-        const args = [ '-l', lstPath, '-o', objPath, '-w', '-e', '-C', project.cpu, srcPath ];
-        console.log(`=> assemble: asmx args: ${args.join(' ')}`);
-        const result = await runAsmx(ctx, project, args);
-        console.log(`=> assemble: asmx result: ${JSON.stringify(result, null, 2)}`);
         ctx.diagnostics.set(parseDiagnostics(ctx, result.stderr));
     } catch (err) {
-        window.showErrorMessage(`assemble() failed with ${(err as Error).message}`);
+        window.showErrorMessage((err as Error).message);
+    }
+}
+
+export async function check(ctx: Context) {
+    try {
+        const result = await assemble(ctx, { genListingFile: false, genObjectFile: false });
+        ctx.diagnostics.clear();
+        ctx.diagnostics.set(parseDiagnostics(ctx, result.stderr));
+    } catch (err) {
+        window.showErrorMessage((err as Error).message);
     }
 }
