@@ -27,6 +27,12 @@
         "category": "KCIDE",
         "title": "Assemble"
       }
+    ],
+    "jsonValidation": [
+      {
+        "url": "./media/kcide.project.schema.json",
+        "fileMatch": [ "kcide.project.json" ]
+      }
     ]
   },
   "scripts": {

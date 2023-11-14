@@ -1,0 +1,50 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://github.com/floooh/vscode-kcide/project",
+    "title": "KC IDE Project",
+    "descripten": "VSCode KC IDE Extension project file schema",
+    "type": "object",
+    "properties": {
+        "mainFile": {
+            "description": "Filename of the main source file",
+            "type": "string",
+            "default": "src/main.asm"
+        },
+        "cpu": {
+            "description": "CPU type for the assembler",
+            "type": "string",
+            "default": "Z80",
+            "enum": [ "Z80", "6502" ]
+        },
+        "system": {
+            "description": "Target computer system",
+            "type": "string",
+            "default": "KC85/4",
+            "enum": [ "KC85/2", "KC85/3", "KC85/4" ]
+        },
+        "output": {
+            "description": "Assembler output properties",
+            "type": "object",
+            "properties": {
+                "dir": {
+                    "description": "Assembler output directory",
+                    "type": "string",
+                    "default": "build"
+                },
+                "type": {
+                    "description": "Output filetype",
+                    "type": "string",
+                    "default": "KCC",
+                    "enum": [ "KCC" ]
+                },
+                "basename": {
+                    "description": "Output base filename (without file extension)",
+                    "type": "string",
+                    "default": "out"
+                }
+            },
+            "required": [ "dir", "type", "basename" ]
+        }
+    },
+    "required": [ "main", "cpu", "system", "output" ]
+}
