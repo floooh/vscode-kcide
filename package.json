@@ -1,0 +1,58 @@
+{
+  "name": "vscode-kcide",
+  "displayName": "KC IDE",
+  "description": "Assembly IDE for KC85 computers",
+  "version": "0.0.1",
+  "publisher": "floooh",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/floooh/vscode-kcide"
+  },
+  "license": "MIT",
+  "bugs": "https://github.com/floooh/vscode-kcide/issues",
+  "homepage": "https://github.com/floooh/vscode-kcide",
+  "keywords": [ "retro-computing", "assembler", "kc85", "z80" ],
+  "engines": {
+    "vscode": "^1.84.0"
+  },
+  "categories": [ "Debuggers", "Programming Languages" ],
+  "activationEvents": [
+    "workspaceContains:kcide.project.json"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "floooh.kcide.assemble",
+        "category": "KCIDE",
+        "title": "Assemble"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.3",
+    "@types/node": "18.x",
+    "@types/vscode": "^1.84.0",
+    "@typescript-eslint/eslint-plugin": "^6.9.0",
+    "@typescript-eslint/parser": "^6.9.0",
+    "@vscode/test-electron": "^2.3.6",
+    "eslint": "^8.52.0",
+    "glob": "^10.3.10",
+    "mocha": "^10.2.0",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@vscode/wasm-wasi": "0.13.0-pre.1"
+  },
+  "extensionDependencies": [
+    "ms-vscode.wasm-wasi-core"
+  ]
+}
