@@ -221,7 +221,7 @@ async function assemble(ctx: Context, options: AssembleOptions): Promise<Assembl
         stdout: result.stdout ?? '',
         stderr: result.stderr ?? '',
         exitCode: result.exitCode,
-    }
+    };
 }
 
 export async function build(ctx: Context) {
