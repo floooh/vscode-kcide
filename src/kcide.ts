@@ -143,7 +143,11 @@ export async function start(ext: ExtensionContext): Promise<Context> {
     const diagnostics = languages.createDiagnosticCollection('kcide');
     const bits = await workspace.fs.readFile(Uri.joinPath(ext.extensionUri, 'media/asmx.wasm'));
     const asmx = await WebAssembly.compile(bits);
-    return { projectUri, wasm, fs, diagnostics, asmx };
+    const ctx = { projectUri, wasm, fs, diagnostics, asmx };
+    workspace.onDidSaveTextDocument(() => {
+        check(ctx);
+    });
+    return ctx;
 }
 
 export async function runAsmx(ctx: Context, args: string[]): Promise<RunResult> {
