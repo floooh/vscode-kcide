@@ -15,6 +15,7 @@ import {
 } from '@vscode/wasm-wasi';
 import fs from 'fs';
 import path from 'path';
+import { hexToKcc } from './kcc';
 
 export interface Context {
     projectUri: Uri,
@@ -125,12 +126,20 @@ function ensureBuildDir(ctx: Context, project: Project): Uri {
     return Uri.file(dirPath);
 }
 
+function getOutputFileUri(ctx: Context, project: Project, filename: string): Uri {
+    return Uri.file(path.join(ensureBuildDir(ctx, project).fsPath, filename));
+}
+
 function getOutputObjectFileUri(ctx: Context, project: Project): Uri {
-    return Uri.file(path.join(ensureBuildDir(ctx, project).fsPath, `${project.output.basename}.hex`));
+    return getOutputFileUri(ctx, project, `${project.output.basename}.hex`);
 }
 
 function getOutputListFileUri(ctx: Context, project: Project): Uri {
-    return Uri.file(path.join(ensureBuildDir(ctx, project).fsPath, `${project.output.basename}.lst`));
+    return getOutputFileUri(ctx, project, `${project.output.basename}.lst`);
+}
+
+function getOutputKccFileUri(ctx: Context, project: Project): Uri {
+    return getOutputFileUri(ctx, project, `${project.output.basename}.kcc`);
 }
 
 export async function start(ext: ExtensionContext): Promise<Context> {
@@ -172,28 +181,44 @@ export async function runAsmx(ctx: Context, args: string[]): Promise<RunResult> 
     return { exitCode, stdout, stderr };
 }
 
-function parseDiagnostics(ctx: Context, stderr: string | undefined): ReadonlyArray<[Uri, readonly Diagnostic[] | undefined]> {
+type DiagnosticsTuple = [Uri, readonly Diagnostic[] | undefined];
+type DiagnosticsArray = ReadonlyArray<DiagnosticsTuple>;
+type ParseDiagnosticsResult = {
+    diagnostics: DiagnosticsArray;
+    numErrors: number,
+    numWarnings: number,
+};
+
+function parseDiagnostics(ctx: Context, stderr: string | undefined): ParseDiagnosticsResult {
     if (stderr === undefined) {
-        return [];
+        return { diagnostics: [], numErrors: 0, numWarnings: 0 };
     }
     const pathPrefix = ctx.projectUri.fsPath;
-    return stderr.split('\n').filter((line) => line.includes('*** Error:') || line.includes('*** Warning:')).map((item) => {
+    let numErrors = 0;
+    let numWarnings = 0;
+    const diagnostics: DiagnosticsArray = stderr.split('\n').filter((line) => (line.includes('*** Error:') || line.includes('*** Warning:'))).map((item) => {
         const parts = item.split(':');
         const srcPath = parts[0].replace('/workspace', pathPrefix);
         const lineNr = Number(parts[1]) - 1;
         const type = parts[2];
         const msg = parts[3].slice(2, -4);
         const severity = type === ' *** Error' ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning;
+        if (severity === DiagnosticSeverity.Error) {
+            numErrors += 1;
+        } else {
+            numWarnings += 1;
+        }
         return [Uri.file(srcPath), [new Diagnostic(new Range(lineNr, 0, lineNr, 256), msg, severity)]];
     });
+    return { diagnostics, numErrors, numWarnings };
 }
 
-interface AssembleOptions {
+type AssembleOptions = {
     genListingFile: boolean,
     genObjectFile: boolean,
 };
 
-interface AssembleResult {
+type AssembleResult = {
     listingUri?: Uri,
     objectUri?: Uri,
     stdout: string,
@@ -201,15 +226,20 @@ interface AssembleResult {
     exitCode: number,
 };
 
-async function assemble(ctx: Context, options: AssembleOptions): Promise<AssembleResult> {
+async function assemble(ctx: Context, project: Project, options: AssembleOptions): Promise<AssembleResult> {
     const { genListingFile, genObjectFile } = options;
-    const project = loadProject(ctx);
     const mainSrcUri = getMainSourceUri(ctx, project);
     if (mainSrcUri === undefined) {
         throw new Error(`Project main file '${project.mainFile}' not found!`);
     }
     const lstUri = getOutputListFileUri(ctx, project);
+    if (genListingFile) {
+        try { await workspace.fs.delete(lstUri); } catch (err) {};
+    }
     const objUri = getOutputObjectFileUri(ctx, project);
+    if (genObjectFile) {
+        try { await workspace.fs.delete(objUri); } catch (err) {};
+    }
     const [ srcPath, objPath, lstPath ] = await Promise.all([
         uriToWasmPath(ctx, mainSrcUri),
         uriToWasmPath(ctx, objUri),
@@ -228,11 +258,26 @@ async function assemble(ctx: Context, options: AssembleOptions): Promise<Assembl
     };
 }
 
+export function writeOutputFile(ctx: Context, project: Project, hexUri: Uri) {
+    const hexData = fs.readFileSync(hexUri.fsPath, { encoding: 'utf8' });
+    // FIXME: file type
+    const kcc = hexToKcc(hexData, true);
+    const uri = getOutputKccFileUri(ctx, project);
+    fs.writeFileSync(uri.fsPath, kcc);
+    return uri;
+}
+
 export async function build(ctx: Context) {
     try {
-        const result = await assemble(ctx, { genListingFile: true, genObjectFile: true });
+        const project = loadProject(ctx);
+        const result = await assemble(ctx, project, { genListingFile: true, genObjectFile: true });
         ctx.diagnostics.clear();
-        ctx.diagnostics.set(parseDiagnostics(ctx, result.stderr));
+        const diagnostics = parseDiagnostics(ctx, result.stderr);
+        ctx.diagnostics.set(diagnostics.diagnostics);
+        if (diagnostics.numErrors === 0) {
+            const uri = writeOutputFile(ctx, project, result.objectUri!);
+            window.showInformationMessage(`Output written to ${uri.path}`);
+        }
     } catch (err) {
         window.showErrorMessage((err as Error).message);
     }
@@ -240,9 +285,10 @@ export async function build(ctx: Context) {
 
 export async function check(ctx: Context) {
     try {
-        const result = await assemble(ctx, { genListingFile: false, genObjectFile: false });
+        const project = loadProject(ctx);
+        const result = await assemble(ctx, project, { genListingFile: false, genObjectFile: false });
         ctx.diagnostics.clear();
-        ctx.diagnostics.set(parseDiagnostics(ctx, result.stderr));
+        ctx.diagnostics.set(parseDiagnostics(ctx, result.stderr).diagnostics);
     } catch (err) {
         window.showErrorMessage((err as Error).message);
     }
