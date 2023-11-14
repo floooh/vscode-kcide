@@ -38,6 +38,14 @@
         "url": "./media/kcide.project.schema.json",
         "fileMatch": [ "kcide.project.json" ]
       }
+    ],
+    "languages": [
+      {
+        "id": "z80|6502",
+        "aliases": [ "assembly", "z80", "6502", "asm" ],
+        "extensions": [ "asm" ],
+        "configuration": "./media/language-configuration.json"
+      }
     ]
   },
   "scripts": {
