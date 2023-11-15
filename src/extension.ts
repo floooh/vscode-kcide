@@ -1,18 +1,24 @@
 import * as vscode from 'vscode';
 import * as commands from './commands';
-import { start } from './kcide';
+import * as kcide from './kcide';
+import * as emu from './emu';
 
 export async function activate(ext: vscode.ExtensionContext) {
 
     console.log('vscode-kcide: activate() called');
     try {
-        const ctx = await start(ext);
+        const ctx = await kcide.start(ext);
+        const project = await kcide.loadProject(ctx);
+        await emu.init(ext, ctx, project);
         console.log('vscode-kcide: started');
-        const cmdBuild = vscode.commands.registerCommand('floooh.kcide.build', async() => {
-            await commands.build(ctx);
+        const cmdBuild = vscode.commands.registerCommand('floooh.kcide.build', async () => {
+            await commands.asmBuild(ctx);
         });
-        const cmdCheck = vscode.commands.registerCommand('floooh.kcide.check', async() => {
-            await commands.check(ctx);
+        const cmdCheck = vscode.commands.registerCommand('floooh.kcide.check', async () => {
+            await commands.asmCheck(ctx);
+        });
+        const cmdOpenEmulator = vscode.commands.registerCommand('floooh.kcide.openEmulator', async () => {
+            await commands.openEmulator(ext, ctx);
         });
         ext.subscriptions.push(cmdBuild, cmdCheck);
     } catch (err) {

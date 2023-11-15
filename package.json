@@ -31,6 +31,11 @@
         "command": "floooh.kcide.check",
         "category": "KCIDE",
         "title": "Check"
+      },
+      {
+        "command": "floooh.kcide.openEmulator",
+        "category": "KCIDE",
+        "title": "Open Emulator"
       }
     ],
     "jsonValidation": [

@@ -1,8 +1,9 @@
-import { window } from 'vscode';
+import { ExtensionContext, window } from 'vscode';
 import { Context } from './types';
 import { loadProject, assemble, parseDiagnostics, writeOutputFile } from './kcide';
+import { ensureEmulator } from './emu';
 
-export async function build(ctx: Context) {
+export async function asmBuild(ctx: Context) {
     try {
         const project = await loadProject(ctx);
         const result = await assemble(ctx, project, { genListingFile: true, genObjectFile: true });
@@ -18,12 +19,21 @@ export async function build(ctx: Context) {
     }
 }
 
-export async function check(ctx: Context) {
+export async function asmCheck(ctx: Context) {
     try {
         const project = await loadProject(ctx);
         const result = await assemble(ctx, project, { genListingFile: false, genObjectFile: false });
         ctx.diagnostics.clear();
         ctx.diagnostics.set(parseDiagnostics(ctx, result.stderr).diagnostics);
+    } catch (err) {
+        window.showErrorMessage((err as Error).message);
+    }
+}
+
+export async function openEmulator(ext: ExtensionContext, ctx: Context) {
+    try {
+        const project = await loadProject(ctx);
+        await ensureEmulator(ext, ctx, project);
     } catch (err) {
         window.showErrorMessage((err as Error).message);
     }

@@ -22,7 +22,7 @@ export interface Project {
 };
 
 export enum CPU { Z80 = 'Z80', M6502 = '6502' };
-export enum System { KC852 = 'KC85/2', KC853 = 'KC85/3', KC854 = 'KC85/4' };
+export enum System { KC853 = 'KC85/3', KC854 = 'KC85/4' };
 export enum FileType { KCC = 'KCC' };
 
 export function isValidString(val: unknown): val is string {
@@ -36,13 +36,13 @@ export function isValidString(val: unknown): val is string {
 }
 
 export function isValidCpu(val: unknown): val is CPU {
-    return isValidString(val) && (val in CPU);
+    return isValidString(val) && (Object.values(CPU).includes(val as CPU));
 }
 
 export function isValidSystem(val: unknown): val is System {
-    return isValidString(val) && (val in System);
+    return isValidString(val) && (Object.values(System).includes(val as System));
 }
 
 export function isValidFileType(val: unknown): val is FileType {
-    return isValidString(val) && (val in FileType);
+    return isValidString(val) && (Object.values(FileType).includes(val as FileType));
 }

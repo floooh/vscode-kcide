@@ -30,7 +30,6 @@ import {
 } from './filesystem';
 import { hexToKcc } from './filetypes';
 
-
 export const projectDefaults: Project = {
     mainFile: 'src/main.asm',
     cpu: CPU.Z80,
@@ -49,16 +48,13 @@ export async function loadProject(ctx: Context): Promise<Project> {
         return projectDefaults;
     }
     const anyProject = JSON.parse(projectJsonContent);
-    return {
-        mainFile: isValidString(anyProject.mainFile) ? anyProject.mainFile : projectDefaults.mainFile,
-        cpu: isValidCpu(anyProject.cpu) ? anyProject.cpu : projectDefaults.cpu,
-        system: isValidSystem(anyProject.system) ? anyProject.system : projectDefaults.system,
-        output: {
-            dir: isValidString(anyProject.output?.dir) ? anyProject.output.dir : projectDefaults.output.dir,
-            type: isValidFileType(anyProject.output?.type) ? anyProject.output.type : projectDefaults.output.type,
-            basename: isValidString(anyProject.output?.basename) ? anyProject.output.basename : projectDefaults.output.basename
-        }
-    };
+    const mainFile = isValidString(anyProject.mainFile) ? anyProject.mainFile : projectDefaults.mainFile;
+    const cpu = isValidCpu(anyProject.cpu) ? anyProject.cpu : projectDefaults.cpu;
+    const system = isValidSystem(anyProject.system) ? anyProject.system : projectDefaults.system;
+    const dir = isValidString(anyProject.output?.dir) ? anyProject.output.dir : projectDefaults.output.dir;
+    const type = isValidFileType(anyProject.output?.type) ? anyProject.output.type : projectDefaults.output.type;
+    const basename = isValidString(anyProject.output?.basename) ? anyProject.output.basename : projectDefaults.output.basename;
+    return { mainFile, cpu, system, output: { dir, type, basename } };
 }
 
 export async function start(ext: ExtensionContext): Promise<Context> {

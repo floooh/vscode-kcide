@@ -20,7 +20,7 @@
             "description": "Target computer system",
             "type": "string",
             "default": "KC85/4",
-            "enum": [ "KC85/2", "KC85/3", "KC85/4" ]
+            "enum": [ "KC85/3", "KC85/4" ]
         },
         "output": {
             "description": "Assembler output properties",
