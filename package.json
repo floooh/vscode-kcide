@@ -33,6 +33,11 @@
         "title": "Check"
       },
       {
+        "command": "floooh.kcide.run",
+        "category": "KCIDE",
+        "title": "Run"
+      },
+      {
         "command": "floooh.kcide.openEmulator",
         "category": "KCIDE",
         "title": "Open Emulator"

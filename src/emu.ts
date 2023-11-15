@@ -34,16 +34,16 @@ async function setupEmulator(ext: ExtensionContext, _ctx: Context, project: Proj
         state = null;
     });
 
-    let jsFilename;
+    let emuFilename;
     switch (project.system) {
-        case System.KC853: jsFilename = 'kc853-ui.js'; break;
-        default:           jsFilename = 'kc854-ui.js'; break;
+        case System.KC853: emuFilename = 'kc853-ui.js'; break;
+        default:           emuFilename = 'kc854-ui.js'; break;
     }
-    const jsUri = panel.webview.asWebviewUri(Uri.joinPath(rootUri, jsFilename));
+    const emuUri = panel.webview.asWebviewUri(Uri.joinPath(rootUri, emuFilename));
+    const shellUri = panel.webview.asWebviewUri(Uri.joinPath(rootUri, 'shell.js'));
     const templ = await readTextFile(Uri.joinPath(rootUri, 'shell.html'));
-    const html = templ.replace('{{{url}}}', jsUri.toString());
+    const html = templ.replace('{{{emu}}}', emuUri.toString()).replace('{{{shell}}}', shellUri.toString());
     panel.webview.html = html;
-    
     return { panel, system: project.system };
 }
 
@@ -68,4 +68,8 @@ export async function ensureEmulator(ext: ExtensionContext, ctx: Context, projec
 
 export async function init(ext: ExtensionContext, ctx: Context, project: Project) {
     await ensureEmulator(ext, ctx, project);
+}
+
+export async function loadKcc(kcc: Uint8Array) {
+    await state!.panel.webview.postMessage({ cmd: 'loadkcc', kcc });
 }

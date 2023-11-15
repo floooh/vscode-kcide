@@ -17,6 +17,9 @@ export async function activate(ext: vscode.ExtensionContext) {
         const cmdCheck = vscode.commands.registerCommand('floooh.kcide.check', async () => {
             await commands.asmCheck(ctx);
         });
+        const cmdRun = vscode.commands.registerCommand('floooh.kcide.run', async () => {
+            await commands.asmRun(ext, ctx);
+        });
         const cmdOpenEmulator = vscode.commands.registerCommand('floooh.kcide.openEmulator', async () => {
             await commands.openEmulator(ext, ctx);
         });
