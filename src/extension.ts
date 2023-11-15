@@ -20,7 +20,7 @@ export async function activate(ext: vscode.ExtensionContext) {
         const cmdOpenEmulator = vscode.commands.registerCommand('floooh.kcide.openEmulator', async () => {
             await commands.openEmulator(ext, ctx);
         });
-        ext.subscriptions.push(cmdBuild, cmdCheck);
+        ext.subscriptions.push(cmdBuild, cmdCheck, cmdOpenEmulator);
     } catch (err) {
         vscode.window.showErrorMessage((err as Error).message);
     }
