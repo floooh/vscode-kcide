@@ -23,7 +23,13 @@ export async function activate(ext: vscode.ExtensionContext) {
         const cmdOpenEmulator = vscode.commands.registerCommand('floooh.kcide.openEmulator', async () => {
             await commands.openEmulator(ext, ctx);
         });
-        ext.subscriptions.push(cmdBuild, cmdCheck, cmdOpenEmulator);
+        const cmdBootEmulator = vscode.commands.registerCommand('floooh.kcide.bootEmulator', async () => {
+            await commands.bootEmulator(ext, ctx);
+        });
+        const cmdResetEmulator = vscode.commands.registerCommand('floooh.kcide.resetEmulator', async () => {
+            await commands.resetEmulator(ext, ctx);
+        });
+        ext.subscriptions.push(cmdBuild, cmdCheck, cmdOpenEmulator, cmdBootEmulator, cmdResetEmulator);
     } catch (err) {
         vscode.window.showErrorMessage((err as Error).message);
     }

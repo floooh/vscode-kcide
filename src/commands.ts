@@ -59,3 +59,23 @@ export async function openEmulator(ext: ExtensionContext, ctx: Context) {
         window.showErrorMessage((err as Error).message);
     }
 }
+
+export async function bootEmulator(ext: ExtensionContext, ctx: Context) {
+    try {
+        const project = await loadProject(ctx);
+        await emu.ensureEmulator(ext, ctx, project);
+        await emu.bootEmulator();
+    } catch (err) {
+        window.showErrorMessage((err as Error).message);
+    }
+}
+
+export async function resetEmulator(ext: ExtensionContext, ctx: Context) {
+    try {
+        const project = await loadProject(ctx);
+        await emu.ensureEmulator(ext, ctx, project);
+        await emu.resetEmulator();
+    } catch (err) {
+        window.showErrorMessage((err as Error).message);
+    }
+}

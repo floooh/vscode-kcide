@@ -71,5 +71,14 @@ export async function init(ext: ExtensionContext, ctx: Context, project: Project
 }
 
 export async function loadKcc(kcc: Uint8Array) {
-    await state!.panel.webview.postMessage({ cmd: 'loadkcc', kcc });
+    await state!.panel.webview.postMessage({ cmd: 'loadkcc', kcc: kcc.buffer });
 }
+
+export async function bootEmulator() {
+    await state!.panel.webview.postMessage({ cmd: 'boot' });
+}
+
+export async function resetEmulator() {
+    await state!.panel.webview.postMessage({ cmd: 'reset' });
+}
+    

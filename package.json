@@ -41,6 +41,16 @@
         "command": "floooh.kcide.openEmulator",
         "category": "KCIDE",
         "title": "Open Emulator"
+      },
+      {
+        "command": "floooh.kcide.bootEmulator",
+        "category": "KCIDE",
+        "title": "Reboot Emulator"
+      },
+      {
+        "command": "floooh.kcide.resetEmulator",
+        "category": "KCIDE",
+        "title": "Reset Emulator"
       }
     ],
     "jsonValidation": [
