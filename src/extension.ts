@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { start, build, check } from './kcide';
+import * as commands from './commands';
+import { start } from './kcide';
 
 export async function activate(ext: vscode.ExtensionContext) {
 
@@ -7,12 +8,11 @@ export async function activate(ext: vscode.ExtensionContext) {
     try {
         const ctx = await start(ext);
         console.log('vscode-kcide: started');
-
         const cmdBuild = vscode.commands.registerCommand('floooh.kcide.build', async() => {
-            await build(ctx);
+            await commands.build(ctx);
         });
         const cmdCheck = vscode.commands.registerCommand('floooh.kcide.check', async() => {
-            await check(ctx);
+            await commands.check(ctx);
         });
         ext.subscriptions.push(cmdBuild, cmdCheck);
     } catch (err) {

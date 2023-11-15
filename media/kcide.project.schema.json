@@ -46,5 +46,5 @@
             "required": [ "dir", "type", "basename" ]
         }
     },
-    "required": [ "main", "cpu", "system", "output" ]
+    "required": [ "mainFile", "cpu", "system", "output" ]
 }

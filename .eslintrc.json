@@ -21,7 +21,8 @@
         "eqeqeq": "warn",
         "no-throw-literal": "warn",
         "semi": "off",
-        "quotes": [ "error", "single" ]
+        "quotes": [ "error", "single" ],
+        "require-await": "error"
     },
     "ignorePatterns": [
         "out",

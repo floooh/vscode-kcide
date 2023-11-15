@@ -1,99 +1,53 @@
 import {
     workspace,
-    window,
     languages,
     ExtensionContext,
     Uri,
-    DiagnosticCollection,
     Diagnostic,
     DiagnosticSeverity,
     Range,
 } from 'vscode';
+import { Wasm, } from '@vscode/wasm-wasi';
 import {
-    RootFileSystem,
-    Wasm,
-} from '@vscode/wasm-wasi';
-import fs from 'fs';
-import path from 'path';
-import { hexToKcc } from './kcc';
+    Context,
+    Project,
+    CPU,
+    System,
+    FileType,
+    isValidString,
+    isValidCpu,
+    isValidSystem,
+    isValidFileType
+} from './types';
+import {
+    uriToWasmPath,
+    getMainSourceUri,
+    getOutputListFileUri,
+    getOutputObjectFileUri,
+    getOutputKccFileUri,
+    writeBinaryFile,
+    readTextFile
+} from './filesystem';
+import { hexToKcc } from './filetypes';
 
-export interface Context {
-    projectUri: Uri,
-    wasm: Wasm,
-    fs: RootFileSystem,
-    diagnostics: DiagnosticCollection,
-    asmx: WebAssembly.Module,
-};
 
-enum CPU { Z80 = 'Z80', M6502 = '6502' };
-enum System { KC852 = 'KC85/2', KC853 = 'KC85/3', KC854 = 'KC85/4' };
-enum OutputFileType { KCC = 'KCC' };
-
-// keep in sync with kcide.project.schema.json
-interface Project {
-    mainFile: string,
-    cpu: CPU,
-    system: System,
-    output: {
-        dir: string,
-        type: OutputFileType,
-        basename: string,
-    }
-};
-
-interface RunResult {
-    exitCode: number,
-    stdout?: string,
-    stderr?: string,
-};
-
-const projectDefaults: Project = {
+export const projectDefaults: Project = {
     mainFile: 'src/main.asm',
     cpu: CPU.Z80,
     system: System.KC854,
     output: {
         dir: 'build',
-        type: OutputFileType.KCC,
+        type: FileType.KCC,
         basename: 'out',
     },
 };
 
-function isValidString(val: unknown): val is string {
-    if (typeof val !== 'string') {
-        return false;
-    }
-    if (val === '') {
-        return false;
-    }
-    return true;
-}
-
-function isValidCpu(val: unknown): val is CPU {
-    return isValidString(val) && (val in CPU);
-}
-
-function isValidSystem(val: unknown): val is System {
-    return isValidString(val) && (val in System);
-}
-
-function isValidOutputFileType(val: unknown): val is OutputFileType {
-    return isValidString(val) && (val in OutputFileType);
-}
-
-async function uriToWasmPath(ctx: Context, uri: Uri): Promise<string> {
-    const uriPath = await ctx.fs.toWasm(uri);
-    if (uriPath === undefined) {
-        throw new Error(`uriToWasmPath: ctx.fs.toWasm(${uriPath}) failed!`);
-    }
-    return uriPath;
-}
-
-function loadProject(ctx: Context): Project {
-    const projectJsonPath = path.join(ctx.projectUri.fsPath, 'kcide.project.json');
-    if (!fs.statSync(projectJsonPath).isFile()) {
+export async function loadProject(ctx: Context): Promise<Project> {
+    const projectJsonUri = Uri.joinPath(ctx.projectUri, 'kcide.project.json');
+    const projectJsonContent = await readTextFile(projectJsonUri);
+    if (projectJsonContent === undefined) {
         return projectDefaults;
     }
-    const projectJsonContent = fs.readFileSync(projectJsonPath, { encoding: 'utf8' });
     const anyProject = JSON.parse(projectJsonContent);
     return {
         mainFile: isValidString(anyProject.mainFile) ? anyProject.mainFile : projectDefaults.mainFile,
@@ -101,45 +55,10 @@ function loadProject(ctx: Context): Project {
         system: isValidSystem(anyProject.system) ? anyProject.system : projectDefaults.system,
         output: {
             dir: isValidString(anyProject.output?.dir) ? anyProject.output.dir : projectDefaults.output.dir,
-            type: isValidOutputFileType(anyProject.output?.type) ? anyProject.output.type : projectDefaults.output.type,
+            type: isValidFileType(anyProject.output?.type) ? anyProject.output.type : projectDefaults.output.type,
             basename: isValidString(anyProject.output?.basename) ? anyProject.output.basename : projectDefaults.output.basename
         }
     };
-}
-
-function getMainSourceUri(ctx: Context, project: Project): Uri | undefined {
-    const filePath = path.join(ctx.projectUri.fsPath, project.mainFile);
-    const stat = fs.statSync(filePath, { throwIfNoEntry: false });
-    if ((stat !== undefined) && stat.isFile()) {
-        return Uri.file(filePath);
-    } else {
-        return undefined;
-    }
-}
-
-function ensureBuildDir(ctx: Context, project: Project): Uri {
-    const dirPath = path.join(ctx.projectUri.fsPath, project.output.dir);
-    const stat = fs.statSync(dirPath, { throwIfNoEntry: false });
-    if ((stat === undefined) || (!stat.isDirectory())) {
-        fs.mkdirSync(dirPath, { recursive: true });
-    }
-    return Uri.file(dirPath);
-}
-
-function getOutputFileUri(ctx: Context, project: Project, filename: string): Uri {
-    return Uri.file(path.join(ensureBuildDir(ctx, project).fsPath, filename));
-}
-
-function getOutputObjectFileUri(ctx: Context, project: Project): Uri {
-    return getOutputFileUri(ctx, project, `${project.output.basename}.hex`);
-}
-
-function getOutputListFileUri(ctx: Context, project: Project): Uri {
-    return getOutputFileUri(ctx, project, `${project.output.basename}.lst`);
-}
-
-function getOutputKccFileUri(ctx: Context, project: Project): Uri {
-    return getOutputFileUri(ctx, project, `${project.output.basename}.kcc`);
 }
 
 export async function start(ext: ExtensionContext): Promise<Context> {
@@ -153,13 +72,16 @@ export async function start(ext: ExtensionContext): Promise<Context> {
     const bits = await workspace.fs.readFile(Uri.joinPath(ext.extensionUri, 'media/asmx.wasm'));
     const asmx = await WebAssembly.compile(bits);
     const ctx = { projectUri, wasm, fs, diagnostics, asmx };
-    workspace.onDidSaveTextDocument(() => {
-        check(ctx);
-    });
     return ctx;
 }
 
-export async function runAsmx(ctx: Context, args: string[]): Promise<RunResult> {
+export interface RunAsmxResult {
+    exitCode: number,
+    stdout?: string,
+    stderr?: string,
+};
+
+export async function runAsmx(ctx: Context, args: string[]): Promise<RunAsmxResult> {
     const process = await ctx.wasm.createProcess('asmx', ctx.asmx, {
         rootFileSystem: ctx.fs,
         stdio: {
@@ -189,7 +111,7 @@ type ParseDiagnosticsResult = {
     numWarnings: number,
 };
 
-function parseDiagnostics(ctx: Context, stderr: string | undefined): ParseDiagnosticsResult {
+export function parseDiagnostics(ctx: Context, stderr: string | undefined): ParseDiagnosticsResult {
     if (stderr === undefined) {
         return { diagnostics: [], numErrors: 0, numWarnings: 0 };
     }
@@ -226,17 +148,17 @@ type AssembleResult = {
     exitCode: number,
 };
 
-async function assemble(ctx: Context, project: Project, options: AssembleOptions): Promise<AssembleResult> {
+export async function assemble(ctx: Context, project: Project, options: AssembleOptions): Promise<AssembleResult> {
     const { genListingFile, genObjectFile } = options;
-    const mainSrcUri = getMainSourceUri(ctx, project);
+    const mainSrcUri = await getMainSourceUri(ctx, project);
     if (mainSrcUri === undefined) {
         throw new Error(`Project main file '${project.mainFile}' not found!`);
     }
-    const lstUri = getOutputListFileUri(ctx, project);
+    const lstUri = await getOutputListFileUri(ctx, project);
     if (genListingFile) {
         try { await workspace.fs.delete(lstUri); } catch (err) {};
     }
-    const objUri = getOutputObjectFileUri(ctx, project);
+    const objUri = await getOutputObjectFileUri(ctx, project);
     if (genObjectFile) {
         try { await workspace.fs.delete(objUri); } catch (err) {};
     }
@@ -258,38 +180,10 @@ async function assemble(ctx: Context, project: Project, options: AssembleOptions
     };
 }
 
-export function writeOutputFile(ctx: Context, project: Project, hexUri: Uri) {
-    const hexData = fs.readFileSync(hexUri.fsPath, { encoding: 'utf8' });
-    // FIXME: file type
+export async function writeOutputFile(ctx: Context, project: Project, hexUri: Uri) {
+    const hexData = await readTextFile(hexUri);
     const kcc = hexToKcc(hexData, true);
-    const uri = getOutputKccFileUri(ctx, project);
-    fs.writeFileSync(uri.fsPath, kcc);
+    const uri = await getOutputKccFileUri(ctx, project);
+    await writeBinaryFile(uri, kcc);
     return uri;
-}
-
-export async function build(ctx: Context) {
-    try {
-        const project = loadProject(ctx);
-        const result = await assemble(ctx, project, { genListingFile: true, genObjectFile: true });
-        ctx.diagnostics.clear();
-        const diagnostics = parseDiagnostics(ctx, result.stderr);
-        ctx.diagnostics.set(diagnostics.diagnostics);
-        if (diagnostics.numErrors === 0) {
-            const uri = writeOutputFile(ctx, project, result.objectUri!);
-            window.showInformationMessage(`Output written to ${uri.path}`);
-        }
-    } catch (err) {
-        window.showErrorMessage((err as Error).message);
-    }
-}
-
-export async function check(ctx: Context) {
-    try {
-        const project = loadProject(ctx);
-        const result = await assemble(ctx, project, { genListingFile: false, genObjectFile: false });
-        ctx.diagnostics.clear();
-        ctx.diagnostics.set(parseDiagnostics(ctx, result.stderr).diagnostics);
-    } catch (err) {
-        window.showErrorMessage((err as Error).message);
-    }
 }
