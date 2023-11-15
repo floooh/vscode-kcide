@@ -11,7 +11,7 @@
   "license": "MIT",
   "bugs": "https://github.com/floooh/vscode-kcide/issues",
   "homepage": "https://github.com/floooh/vscode-kcide",
-  "keywords": [ "retro-computing", "assembler", "kc85", "z80" ],
+  "keywords": [ "retro-computing", "assembler", "kc85", "z80", "ide" ],
   "engines": {
     "vscode": "^1.84.0"
   },
@@ -20,6 +20,8 @@
     "workspaceContains:kcide.project.json"
   ],
   "main": "./out/extension.js",
+  "browser": "./out/extension.js",
+  "preview": true,
   "contributes": {
     "commands": [
       {
@@ -72,6 +74,18 @@
         "language": "asm",
         "scopeName": "source.asm",
         "path": "./media/asm.tmGrammar.json"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "floooh.kcide.build",
+        "key": "f7",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "floooh.kcide.run",
+        "key": "f5",
+        "when": "editorTextFocus"
       }
     ]
   },
