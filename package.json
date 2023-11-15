@@ -110,7 +110,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@vscode/wasm-wasi": "0.13.0-pre.1"
+    "@vscode/wasm-wasi": "0.11.0-next.1"
   },
   "extensionDependencies": [
     "ms-vscode.wasm-wasi-core"
