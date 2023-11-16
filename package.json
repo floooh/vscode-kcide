@@ -2,7 +2,7 @@
   "name": "vscode-kcide",
   "displayName": "KC IDE",
   "description": "Assembly IDE for KC85 computers",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "floooh",
   "repository": {
     "type": "git",
@@ -18,6 +18,11 @@
     "z80",
     "ide"
   ],
+  "icon": "media/logo.png",
+  "galleryBanner": {
+    "color": "#111111",
+    "theme": "dark"
+  },
   "engines": {
     "vscode": "^1.84.0"
   },
