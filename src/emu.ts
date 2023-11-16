@@ -26,10 +26,12 @@ async function setupEmulator(ext: ExtensionContext, project: Project): Promise<S
         },
         {
             enableScripts: true,
+            enableForms: false,
             retainContextWhenHidden: true,
             localResourceRoots: [ rootUri ],
         }
     );
+    panel.iconPath = Uri.joinPath(rootUri, 'logo-small.png');
     panel.onDidDispose(() => {
         state = null;
     });
