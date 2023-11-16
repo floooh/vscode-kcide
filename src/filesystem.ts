@@ -46,17 +46,16 @@ export async function readTextFile(uri: Uri): Promise<string> {
     return decoder.decode(data);
 }
 
-export async function getMainSourceUri(project: Project): Promise<Uri | undefined> {
-    const uri = Uri.joinPath(project.uri, project.mainFile);
-    if (await fileExists(uri)) {
-        return uri;
-    } else {
-        return undefined;
-    }
+export function getSourceDirUri(project: Project): Uri {
+    return Uri.joinPath(project.uri, project.assembler.srcDir);
+}
+
+export function getMainSourceUri(project: Project): Uri {
+    return Uri.joinPath(getSourceDirUri(project), project.assembler.mainSourceFile);
 }
 
 export async function ensureBuildDir(project: Project): Promise<Uri> {
-    const uri = Uri.joinPath(project.uri, project.output.dir);
+    const uri = Uri.joinPath(project.uri, project.assembler.outDir);
     const exists = await dirExists(uri);
     if (!exists) {
         await workspace.fs.createDirectory(uri);
@@ -70,13 +69,13 @@ export async function getOutputFileUri(project: Project, filename: string): Prom
 }
 
 export async function getOutputObjectFileUri(project: Project): Promise<Uri> {
-    return await getOutputFileUri(project, `${project.output.basename}.hex`);
+    return await getOutputFileUri(project, `${project.assembler.outBaseFilename}.hex`);
 }
 
 export async function getOutputListFileUri(project: Project): Promise<Uri> {
-    return await getOutputFileUri(project, `${project.output.basename}.lst`);
+    return await getOutputFileUri(project, `${project.assembler.outBaseFilename}.lst`);
 }
 
 export async function getOutputKccFileUri(project: Project): Promise<Uri> {
-    return await getOutputFileUri(project, `${project.output.basename}.kcc`);
+    return await getOutputFileUri(project, `${project.assembler.outBaseFilename}.kcc`);
 }

@@ -18,8 +18,8 @@ let state: State | null = null;
 async function setupEmulator(ext: ExtensionContext, project: Project): Promise<State> {
     const rootUri = Uri.joinPath(ext.extensionUri, 'media');
     const panel = window.createWebviewPanel(
-        project.system, // type
-        project.system, // title
+        project.emulator.system, // type
+        project.emulator.system, // title
         {
             viewColumn: ViewColumn.Two,
             preserveFocus: true,
@@ -35,7 +35,7 @@ async function setupEmulator(ext: ExtensionContext, project: Project): Promise<S
     });
 
     let emuFilename;
-    switch (project.system) {
+    switch (project.emulator.system) {
         case System.KC853: emuFilename = 'kc853-ui.js'; break;
         default:           emuFilename = 'kc854-ui.js'; break;
     }
@@ -44,7 +44,7 @@ async function setupEmulator(ext: ExtensionContext, project: Project): Promise<S
     const templ = await readTextFile(Uri.joinPath(rootUri, 'shell.html'));
     const html = templ.replace('{{{emu}}}', emuUri.toString()).replace('{{{shell}}}', shellUri.toString());
     panel.webview.html = html;
-    return { panel, system: project.system };
+    return { panel, system: project.emulator.system };
 }
 
 function discardEmulator() {
@@ -58,7 +58,7 @@ export async function ensureEmulator(ext: ExtensionContext, project: Project) {
     if (state === null) {
         state = await setupEmulator(ext, project);
     } else {
-        if (state.system !== project.system) {
+        if (state.system !== project.emulator.system) {
             discardEmulator();
             state = await setupEmulator(ext, project);
         }

@@ -10,13 +10,16 @@ export type WasiEnv = {
 // keep in sync with kcide.project.schema.json
 export type Project = {
     uri: Uri,
-    mainFile: string,
-    cpu: CPU,
-    system: System,
-    output: {
-        dir: string,
-        type: FileType,
-        basename: string,
+    emulator: {
+        system: System,
+    },
+    assembler: {
+        srcDir: string,
+        mainSourceFile: string,
+        cpu: CPU,
+        outDir: string,
+        outBaseFilename: string,
+        outFiletype: FileType,
     }
 };
 

@@ -6,7 +6,10 @@ import {
 import { Project } from './types';
 import {
     uriToWasmPath,
+    dirExists,
+    fileExists,
     getMainSourceUri,
+    getSourceDirUri,
     getOutputListFileUri,
     getOutputObjectFileUri,
     getOutputKccFileUri,
@@ -60,9 +63,13 @@ type AssembleResult = {
 
 export async function assemble(ext: ExtensionContext, project: Project, options: AssembleOptions): Promise<AssembleResult> {
     const { genListingFile, genObjectFile } = options;
-    const mainSrcUri = await getMainSourceUri(project);
-    if (mainSrcUri === undefined) {
-        throw new Error(`Project main file '${project.mainFile}' not found!`);
+    const srcDirUri = getSourceDirUri(project);
+    if (!(await dirExists(srcDirUri))) {
+        throw new Error(`Project source directory '${srcDirUri.fsPath}' not found!`);
+    }
+    const mainSrcUri = getMainSourceUri(project);
+    if (!(await fileExists(mainSrcUri))) {
+        throw new Error(`Project main file '${mainSrcUri.fsPath}' not found!`);
     }
     const lstUri = await getOutputListFileUri(project);
     if (genListingFile) {
@@ -72,14 +79,15 @@ export async function assemble(ext: ExtensionContext, project: Project, options:
     if (genObjectFile) {
         try { await workspace.fs.delete(objUri); } catch (err) {};
     }
-    const [ srcPath, objPath, lstPath ] = await Promise.all([
+    const [ wasmSrcDir, wasmMainSrcPath, wasmObjPath, wasmLstPath ] = await Promise.all([
+        uriToWasmPath(ext, srcDirUri),
         uriToWasmPath(ext, mainSrcUri),
         uriToWasmPath(ext, objUri),
         uriToWasmPath(ext, lstUri),
     ]);
-    const stdArgs = [ '-w', '-e', '-C', project.cpu, srcPath ];
-    const lstArgs = genListingFile ? [ '-l', lstPath ] : [];
-    const objArgs = genObjectFile ? [ '-o', objPath ] : [];
+    const stdArgs = [ '-w', '-e', '-i', wasmSrcDir, '-C', project.assembler.cpu, wasmMainSrcPath ];
+    const lstArgs = genListingFile ? [ '-l', wasmLstPath ] : [];
+    const objArgs = genObjectFile ? [ '-o', wasmObjPath ] : [];
     const result = await runAsmx(ext, [ ...lstArgs, ...objArgs, ...stdArgs ]);
     return {
         listingUri: genListingFile ? lstUri: undefined,

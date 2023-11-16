@@ -5,46 +5,70 @@
     "descripten": "VSCode KC IDE Extension project file schema",
     "type": "object",
     "properties": {
-        "mainFile": {
-            "description": "Filename of the main source file",
-            "type": "string",
-            "default": "src/main.asm"
-        },
-        "cpu": {
-            "description": "CPU type for the assembler",
-            "type": "string",
-            "default": "Z80",
-            "enum": [ "Z80", "6502" ]
-        },
-        "system": {
-            "description": "Target computer system",
-            "type": "string",
-            "default": "KC85/4",
-            "enum": [ "KC85/3", "KC85/4" ]
-        },
-        "output": {
-            "description": "Assembler output properties",
+        "emulator": {
+            "description": "Emulator properties",
             "type": "object",
             "properties": {
-                "dir": {
-                    "description": "Assembler output directory",
+                "system": {
+                    "description": "Target computer system",
+                    "type": "string",
+                    "default": "KC85/4",
+                    "enum": [ "KC85/3", "KC85/4" ]
+                }
+            },
+            "additionalProperties": false,
+            "required": [
+                "system"
+            ]
+        },
+        "assembler": {
+            "description": "Assembler properties",
+            "type": "object",
+            "properties": {
+                "srcDir": {
+                    "description": "Source code root directory",
+                    "type": "string",
+                    "default": "src"
+                },
+                "mainSourceFile": {
+                    "description": "Filename of the main source file",
+                    "type": "string",
+                    "default": "main.asm"
+                },
+                "cpu": {
+                    "description": "Default CPU type for assembly code",
+                    "type": "string",
+                    "default": "Z80",
+                    "enum": [ "Z80", "6502" ]
+                },
+                "outDir": {
+                    "description": "Output directory",
                     "type": "string",
                     "default": "build"
                 },
-                "type": {
+                "outBaseFilename": {
+                    "description": "Base filename of output files",
+                    "type": "string",
+                    "default": "out"
+                },
+                "outFiletype": {
                     "description": "Output filetype",
                     "type": "string",
                     "default": "KCC",
                     "enum": [ "KCC" ]
-                },
-                "basename": {
-                    "description": "Output base filename (without file extension)",
-                    "type": "string",
-                    "default": "out"
                 }
             },
-            "required": [ "dir", "type", "basename" ]
+            "additionalProperties": false,
+            "required": [
+                "srcDir",
+                "mainSourceFile",
+                "cpu",
+                "outDir",
+                "outBaseFilename",
+                "outFiletype"
+            ]
         }
     },
-    "required": [ "mainFile", "cpu", "system", "output" ]
+    "additionalProperties": false,
+    "required": [ "assembler", "emulator" ]
 }

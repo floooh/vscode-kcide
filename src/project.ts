@@ -3,14 +3,17 @@ import { Project, CPU, System, FileType, isValidString, isValidCpu, isValidFileT
 import { readTextFile } from './filesystem';
 
 export const projectDefaults: Omit<Project, 'uri'> = {
-    mainFile: 'src/main.asm',
-    cpu: CPU.Z80,
-    system: System.KC854,
-    output: {
-        dir: 'build',
-        type: FileType.KCC,
-        basename: 'out',
+    emulator: {
+        system: System.KC854,
     },
+    assembler: {
+        srcDir: 'src',
+        mainSourceFile: 'main.asm',
+        cpu: CPU.Z80,
+        outDir: 'build',
+        outBaseFilename: 'out',
+        outFiletype: FileType.KCC,
+    }
 };
 
 function requireProjectUri(): Uri {
@@ -27,13 +30,32 @@ export async function loadProject(): Promise<Project> {
     try {
         const projectJsonContent = await readTextFile(projectJsonUri);
         const anyProject = JSON.parse(projectJsonContent);
-        const mainFile = isValidString(anyProject.mainFile) ? anyProject.mainFile : projectDefaults.mainFile;
-        const cpu = isValidCpu(anyProject.cpu) ? anyProject.cpu : projectDefaults.cpu;
-        const system = isValidSystem(anyProject.system) ? anyProject.system : projectDefaults.system;
-        const dir = isValidString(anyProject.output?.dir) ? anyProject.output.dir : projectDefaults.output.dir;
-        const type = isValidFileType(anyProject.output?.type) ? anyProject.output.type : projectDefaults.output.type;
-        const basename = isValidString(anyProject.output?.basename) ? anyProject.output.basename : projectDefaults.output.basename;
-        return { uri: projectUri, mainFile, cpu, system, output: { dir, type, basename } };
+        const system = isValidSystem(anyProject.emulator?.system)
+            ? anyProject.emulator.system
+            : projectDefaults.emulator.system;
+        const srcDir = isValidString(anyProject.assembler?.srcDir)
+            ? anyProject.assembler.srcDir
+            : projectDefaults.assembler.srcDir;
+        const mainSourceFile = isValidString(anyProject.assembler?.mainSourceFile)
+            ? anyProject.assembler.mainSourceFile
+            : projectDefaults.assembler.mainSourceFile;
+        const cpu = isValidCpu(anyProject.assembler.cpu)
+            ? anyProject.assembler.cpu
+            : projectDefaults.assembler.cpu;
+        const outDir = isValidString(anyProject.assembler?.outDir)
+            ? anyProject.assembler.outDir
+            : projectDefaults.assembler.outDir;
+        const outBaseFilename = isValidString(anyProject.assembler?.outBaseFilename)
+            ? anyProject.assembler.outBaseFilename
+            : projectDefaults.assembler.outBaseFilename;
+        const outFiletype = isValidFileType(anyProject.assembler?.outFiletype)
+            ? anyProject.assembler.outFiletype
+            : projectDefaults.assembler.outFiletype;
+        return {
+            uri: projectUri,
+            emulator: { system },
+            assembler: { srcDir, mainSourceFile, cpu, outDir, outBaseFilename, outFiletype },
+        };
     } catch (err) {
         // no or invalid kcide.project.json: return default project settings
         window.showWarningMessage('Please create a kcide.project.json file!');
