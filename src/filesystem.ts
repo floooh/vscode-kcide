@@ -76,6 +76,10 @@ export async function getOutputListFileUri(project: Project): Promise<Uri> {
     return await getOutputFileUri(project, `${project.assembler.outBaseFilename}.lst`);
 }
 
+export async function getOutputMapFileUri(project: Project): Promise<Uri> {
+    return await getOutputFileUri(project, `${project.assembler.outBaseFilename}.map`);
+}
+
 export async function getOutputKccFileUri(project: Project): Promise<Uri> {
     return await getOutputFileUri(project, `${project.assembler.outBaseFilename}.kcc`);
 }

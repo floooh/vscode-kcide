@@ -8,7 +8,7 @@ import { readBinaryFile } from './filesystem';
 export async function asmBuild(ext: ExtensionContext) {
     try {
         const project = await loadProject();
-        const result = await assemble(ext, project, { genListingFile: true, genObjectFile: true });
+        const result = await assemble(ext, project, { genListingFile: true, genObjectFile: true, genMapFile: true });
         const diagnostics = updateDiagnosticsFromStderr(project.uri, result.stderr);
         if (diagnostics.numErrors=== 0) {
             const uri = await writeOutputFile(project, result.objectUri!);
@@ -22,7 +22,7 @@ export async function asmBuild(ext: ExtensionContext) {
 export async function asmCheck(ext: ExtensionContext) {
     try {
         const project = await loadProject();
-        const result = await assemble(ext, project, { genListingFile: false, genObjectFile: false });
+        const result = await assemble(ext, project, { genListingFile: false, genObjectFile: false, genMapFile: true });
         updateDiagnosticsFromStderr(project.uri, result.stderr);
     } catch (err) {
         window.showErrorMessage((err as Error).message);
@@ -32,7 +32,7 @@ export async function asmCheck(ext: ExtensionContext) {
 export async function asmRun(ext: ExtensionContext) {
     try {
         const project = await loadProject();
-        const result = await assemble(ext, project, { genListingFile: true, genObjectFile: true });
+        const result = await assemble(ext, project, { genListingFile: true, genObjectFile: true, genMapFile: true });
         const diagnostics = updateDiagnosticsFromStderr(project.uri, result.stderr);
         if (diagnostics.numErrors === 0) {
             const uri = await writeOutputFile(project, result.objectUri!);
