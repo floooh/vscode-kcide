@@ -1,8 +1,8 @@
 var Module = {
-    preRun: [
-        () => { init(); } 
+    preRun: [],
+    postRun: [
+        () => { init(); }
     ],
-    postRun: [],
     print: (() => {
         return (text) => {
             text = Array.prototype.slice.call(arguments).join(' ');
@@ -36,6 +36,7 @@ function init() {
             default: console.log('unknown cmd called'); break;
         }
     });
+    Module._webapi_disable_speaker_icon();
 };
 
 function boot() {
