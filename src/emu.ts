@@ -5,7 +5,7 @@ import {
     ViewColumn,
     Uri,
 } from 'vscode';
-import { System, Context, Project } from './types';
+import { System, Project } from './types';
 import { readTextFile } from './filesystem';
 
 interface State {
@@ -15,7 +15,7 @@ interface State {
 
 let state: State | null = null;
 
-async function setupEmulator(ext: ExtensionContext, _ctx: Context, project: Project): Promise<State> {
+async function setupEmulator(ext: ExtensionContext, project: Project): Promise<State> {
     const rootUri = Uri.joinPath(ext.extensionUri, 'media');
     const panel = window.createWebviewPanel(
         project.system, // type
@@ -27,7 +27,7 @@ async function setupEmulator(ext: ExtensionContext, _ctx: Context, project: Proj
         {
             enableScripts: true,
             retainContextWhenHidden: true,
-            localResourceRoots: [ rootUri ], 
+            localResourceRoots: [ rootUri ],
         }
     );
     panel.onDidDispose(() => {
@@ -54,20 +54,20 @@ function discardEmulator() {
     }
 }
 
-export async function ensureEmulator(ext: ExtensionContext, ctx: Context, project: Project) {
+export async function ensureEmulator(ext: ExtensionContext, project: Project) {
     if (state === null) {
-        state = await setupEmulator(ext, ctx, project);
+        state = await setupEmulator(ext, project);
     } else {
         if (state.system !== project.system) {
             discardEmulator();
-            state = await setupEmulator(ext, ctx, project);
+            state = await setupEmulator(ext, project);
         }
         state.panel.reveal(ViewColumn.Two, true);
     }
 }
 
-export async function init(ext: ExtensionContext, ctx: Context, project: Project) {
-    await ensureEmulator(ext, ctx, project);
+export async function init(ext: ExtensionContext, project: Project) {
+    await ensureEmulator(ext, project);
 }
 
 export async function loadKcc(kcc: Uint8Array) {
@@ -81,4 +81,3 @@ export async function bootEmulator() {
 export async function resetEmulator() {
     await state!.panel.webview.postMessage({ cmd: 'reset' });
 }
-    

@@ -1,16 +1,15 @@
 import { Uri, DiagnosticCollection } from 'vscode';
 import { RootFileSystem, Wasm } from '@vscode/wasm-wasi';
 
-export interface Context {
-    projectUri: Uri,
+export type WasiEnv = {
     wasm: Wasm,
     fs: RootFileSystem,
-    diagnostics: DiagnosticCollection,
     asmx: WebAssembly.Module,
 };
 
 // keep in sync with kcide.project.schema.json
-export interface Project {
+export type Project = {
+    uri: Uri,
     mainFile: string,
     cpu: CPU,
     system: System,

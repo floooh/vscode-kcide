@@ -1,10 +1,12 @@
-import { workspace, Uri, FileType } from 'vscode';
-import { Context, Project } from './types';
+import { workspace, ExtensionContext, Uri, FileType } from 'vscode';
+import { Project } from './types';
+import { requireWasiEnv } from './wasi';
 
 const decoder = new TextDecoder('utf-8');
 
-export async function uriToWasmPath(ctx: Context, uri: Uri): Promise<string> {
-    const uriPath = await ctx.fs.toWasm(uri);
+export async function uriToWasmPath(ext: ExtensionContext, uri: Uri): Promise<string> {
+    const wasiEnv = await requireWasiEnv(ext);
+    const uriPath = await wasiEnv.fs.toWasm(uri);
     if (uriPath === undefined) {
         throw new Error(`uriToWasmPath: ctx.fs.toWasm(${uriPath}) failed!`);
     }
@@ -44,8 +46,8 @@ export async function readTextFile(uri: Uri): Promise<string> {
     return decoder.decode(data);
 }
 
-export async function getMainSourceUri(ctx: Context, project: Project): Promise<Uri | undefined> {
-    const uri = Uri.joinPath(ctx.projectUri, project.mainFile);
+export async function getMainSourceUri(project: Project): Promise<Uri | undefined> {
+    const uri = Uri.joinPath(project.uri, project.mainFile);
     if (await fileExists(uri)) {
         return uri;
     } else {
@@ -53,8 +55,8 @@ export async function getMainSourceUri(ctx: Context, project: Project): Promise<
     }
 }
 
-export async function ensureBuildDir(ctx: Context, project: Project): Promise<Uri> {
-    const uri = Uri.joinPath(ctx.projectUri, project.output.dir);
+export async function ensureBuildDir(project: Project): Promise<Uri> {
+    const uri = Uri.joinPath(project.uri, project.output.dir);
     const exists = await dirExists(uri);
     if (!exists) {
         await workspace.fs.createDirectory(uri);
@@ -62,19 +64,19 @@ export async function ensureBuildDir(ctx: Context, project: Project): Promise<Ur
     return uri;
 }
 
-export async function getOutputFileUri(ctx: Context, project: Project, filename: string): Promise<Uri> {
-    const buildDirUri = await ensureBuildDir(ctx, project);
+export async function getOutputFileUri(project: Project, filename: string): Promise<Uri> {
+    const buildDirUri = await ensureBuildDir(project);
     return Uri.joinPath(buildDirUri, filename);
 }
 
-export async function getOutputObjectFileUri(ctx: Context, project: Project): Promise<Uri> {
-    return await getOutputFileUri(ctx, project, `${project.output.basename}.hex`);
+export async function getOutputObjectFileUri(project: Project): Promise<Uri> {
+    return await getOutputFileUri(project, `${project.output.basename}.hex`);
 }
 
-export async function getOutputListFileUri(ctx: Context, project: Project): Promise<Uri> {
-    return await getOutputFileUri(ctx, project, `${project.output.basename}.lst`);
+export async function getOutputListFileUri(project: Project): Promise<Uri> {
+    return await getOutputFileUri(project, `${project.output.basename}.lst`);
 }
 
-export async function getOutputKccFileUri(ctx: Context, project: Project): Promise<Uri> {
-    return await getOutputFileUri(ctx, project, `${project.output.basename}.kcc`);
+export async function getOutputKccFileUri(project: Project): Promise<Uri> {
+    return await getOutputFileUri(project, `${project.output.basename}.kcc`);
 }

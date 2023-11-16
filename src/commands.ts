@@ -1,18 +1,17 @@
 import { ExtensionContext, window } from 'vscode';
-import { Context } from './types';
-import { loadProject, assemble, parseDiagnostics, writeOutputFile } from './kcide';
+import { assemble, writeOutputFile } from './assemble';
+import { loadProject } from './project';
+import { updateDiagnosticsFromStderr } from './diagnostics';
 import * as emu from './emu';
 import { readBinaryFile } from './filesystem';
 
-export async function asmBuild(ctx: Context) {
+export async function asmBuild(ext: ExtensionContext) {
     try {
-        const project = await loadProject(ctx);
-        const result = await assemble(ctx, project, { genListingFile: true, genObjectFile: true });
-        ctx.diagnostics.clear();
-        const diagnostics = parseDiagnostics(ctx, result.stderr);
-        ctx.diagnostics.set(diagnostics.diagnostics);
-        if (diagnostics.numErrors === 0) {
-            const uri = await writeOutputFile(ctx, project, result.objectUri!);
+        const project = await loadProject();
+        const result = await assemble(ext, project, { genListingFile: true, genObjectFile: true });
+        const diagnostics = updateDiagnosticsFromStderr(project.uri, result.stderr);
+        if (diagnostics.numErrors=== 0) {
+            const uri = await writeOutputFile(project, result.objectUri!);
             window.showInformationMessage(`Output written to ${uri.path}`);
         }
     } catch (err) {
@@ -20,28 +19,25 @@ export async function asmBuild(ctx: Context) {
     }
 }
 
-export async function asmCheck(ctx: Context) {
+export async function asmCheck(ext: ExtensionContext) {
     try {
-        const project = await loadProject(ctx);
-        const result = await assemble(ctx, project, { genListingFile: false, genObjectFile: false });
-        ctx.diagnostics.clear();
-        ctx.diagnostics.set(parseDiagnostics(ctx, result.stderr).diagnostics);
+        const project = await loadProject();
+        const result = await assemble(ext, project, { genListingFile: false, genObjectFile: false });
+        updateDiagnosticsFromStderr(project.uri, result.stderr);
     } catch (err) {
         window.showErrorMessage((err as Error).message);
     }
 }
 
-export async function asmRun(ext: ExtensionContext, ctx: Context) {
+export async function asmRun(ext: ExtensionContext) {
     try {
-        const project = await loadProject(ctx);
-        const result = await assemble(ctx, project, { genListingFile: true, genObjectFile: true });
-        ctx.diagnostics.clear();
-        const diagnostics = parseDiagnostics(ctx, result.stderr);
-        ctx.diagnostics.set(diagnostics.diagnostics);
+        const project = await loadProject();
+        const result = await assemble(ext, project, { genListingFile: true, genObjectFile: true });
+        const diagnostics = updateDiagnosticsFromStderr(project.uri, result.stderr);
         if (diagnostics.numErrors === 0) {
-            const uri = await writeOutputFile(ctx, project, result.objectUri!);
+            const uri = await writeOutputFile(project, result.objectUri!);
             const kcc = await readBinaryFile(uri);
-            await emu.ensureEmulator(ext, ctx, project);
+            await emu.ensureEmulator(ext, project);
             await emu.loadKcc(kcc);
         } else {
             window.showErrorMessage('Assembler returned with errors');
@@ -51,29 +47,29 @@ export async function asmRun(ext: ExtensionContext, ctx: Context) {
     }
 }
 
-export async function openEmulator(ext: ExtensionContext, ctx: Context) {
+export async function openEmulator(ext: ExtensionContext) {
     try {
-        const project = await loadProject(ctx);
-        await emu.ensureEmulator(ext, ctx, project);
+        const project = await loadProject();
+        await emu.ensureEmulator(ext, project);
     } catch (err) {
         window.showErrorMessage((err as Error).message);
     }
 }
 
-export async function bootEmulator(ext: ExtensionContext, ctx: Context) {
+export async function bootEmulator(ext: ExtensionContext) {
     try {
-        const project = await loadProject(ctx);
-        await emu.ensureEmulator(ext, ctx, project);
+        const project = await loadProject();
+        await emu.ensureEmulator(ext, project);
         await emu.bootEmulator();
     } catch (err) {
         window.showErrorMessage((err as Error).message);
     }
 }
 
-export async function resetEmulator(ext: ExtensionContext, ctx: Context) {
+export async function resetEmulator(ext: ExtensionContext) {
     try {
-        const project = await loadProject(ctx);
-        await emu.ensureEmulator(ext, ctx, project);
+        const project = await loadProject();
+        await emu.ensureEmulator(ext, project);
         await emu.resetEmulator();
     } catch (err) {
         window.showErrorMessage((err as Error).message);
