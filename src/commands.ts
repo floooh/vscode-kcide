@@ -3,7 +3,8 @@ import { assemble, writeOutputFile } from './assemble';
 import { loadProject } from './project';
 import { updateDiagnosticsFromStderr } from './diagnostics';
 import * as emu from './emu';
-import { readBinaryFile } from './filesystem';
+import * as debug from './debug';
+import { readBinaryFile, getOutputMapFileUri } from './filesystem';
 
 export async function asmBuild(ext: ExtensionContext) {
     try {
@@ -11,7 +12,7 @@ export async function asmBuild(ext: ExtensionContext) {
         const result = await assemble(ext, project, { genListingFile: true, genObjectFile: true, genMapFile: true });
         const diagnostics = updateDiagnosticsFromStderr(project.uri, result.stderr);
         if (diagnostics.numErrors=== 0) {
-            const uri = await writeOutputFile(project, result.objectUri!);
+            const uri = await writeOutputFile(project, result.objectUri!, true);
             window.showInformationMessage(`Output written to ${uri.path}`);
         }
     } catch (err) {
@@ -35,10 +36,27 @@ export async function asmRun(ext: ExtensionContext) {
         const result = await assemble(ext, project, { genListingFile: true, genObjectFile: true, genMapFile: true });
         const diagnostics = updateDiagnosticsFromStderr(project.uri, result.stderr);
         if (diagnostics.numErrors === 0) {
-            const uri = await writeOutputFile(project, result.objectUri!);
-            const kcc = await readBinaryFile(uri);
-            await emu.ensureEmulator(ext, project);
-            await emu.loadKcc(kcc);
+            const kccUri = await writeOutputFile(project, result.objectUri!, true);
+            // start directly without debug session
+            const kcc = await readBinaryFile(kccUri);
+            await emu.loadKcc(kcc, true, false);
+        } else {
+            window.showErrorMessage('Assembler returned with errors');
+        }
+    } catch (err) {
+        window.showErrorMessage((err as Error).message);
+    }
+}
+
+export async function asmDebug(ext: ExtensionContext) {
+    try {
+        // FIXME FIXME FIXME
+        const project = await loadProject();
+        const result = await assemble(ext, project, { genListingFile: true, genObjectFile: true, genMapFile: true });
+        const diagnostics = updateDiagnosticsFromStderr(project.uri, result.stderr);
+        if (diagnostics.numErrors === 0) {
+            const kccUri = await writeOutputFile(project, result.objectUri!, true);
+            await debug.start(ext, project, kccUri, false);
         } else {
             window.showErrorMessage('Assembler returned with errors');
         }

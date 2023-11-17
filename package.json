@@ -54,6 +54,11 @@
         "title": "Run"
       },
       {
+        "command": "floooh.kcide.debug",
+        "category": "KCIDE",
+        "title": "Debug"
+      },
+      {
         "command": "floooh.kcide.openEmulator",
         "category": "KCIDE",
         "title": "Open Emulator"
@@ -99,16 +104,18 @@
         "path": "./media/asm.tmGrammar.json"
       }
     ],
-    "keybindings": [
+    "breakpoints": [
       {
-        "command": "floooh.kcide.build",
-        "key": "f7",
-        "when": "editorTextFocus"
-      },
+        "language": "asm"
+      }
+    ],
+    "debuggers": [
       {
-        "command": "floooh.kcide.run",
-        "key": "f5",
-        "when": "editorTextFocus"
+        "type": "kcide",
+        "languages": [
+          "asm"
+        ],
+        "label": "KC IDE Debug"
       }
     ]
   },
@@ -127,8 +134,11 @@
     "@types/vscode": "^1.84.0",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
+    "@vscode/debugadapter": "^1.64.0",
     "@vscode/test-electron": "^2.3.6",
+    "await-notify": "^1.0.1",
     "eslint": "^8.52.0",
+    "events": "^3.3.0",
     "glob": "^10.3.10",
     "mocha": "^10.2.0",
     "ts-loader": "^9.5.1",

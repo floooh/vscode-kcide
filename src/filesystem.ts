@@ -41,6 +41,15 @@ export async function readBinaryFile(uri: Uri): Promise<Uint8Array> {
     return workspace.fs.readFile(uri);
 }
 
+export async function ensureBuildDir(project: Project): Promise<Uri> {
+    const uri = Uri.joinPath(project.uri, project.assembler.outDir);
+    const exists = await dirExists(uri);
+    if (!exists) {
+        await workspace.fs.createDirectory(uri);
+    }
+    return uri;
+}
+
 export async function readTextFile(uri: Uri): Promise<string> {
     const data = await readBinaryFile(uri);
     return decoder.decode(data);
@@ -54,32 +63,26 @@ export function getMainSourceUri(project: Project): Uri {
     return Uri.joinPath(getSourceDirUri(project), project.assembler.mainSourceFile);
 }
 
-export async function ensureBuildDir(project: Project): Promise<Uri> {
-    const uri = Uri.joinPath(project.uri, project.assembler.outDir);
-    const exists = await dirExists(uri);
-    if (!exists) {
-        await workspace.fs.createDirectory(uri);
-    }
-    return uri;
+export function getOutDirUri(project: Project): Uri {
+    return Uri.joinPath(project.uri, project.assembler.outDir);
 }
 
-export async function getOutputFileUri(project: Project, filename: string): Promise<Uri> {
-    const buildDirUri = await ensureBuildDir(project);
-    return Uri.joinPath(buildDirUri, filename);
+export function getOutputFileUri(project: Project, filename: string): Uri {
+    return Uri.joinPath(getOutDirUri(project), filename);
 }
 
-export async function getOutputObjectFileUri(project: Project): Promise<Uri> {
-    return await getOutputFileUri(project, `${project.assembler.outBaseFilename}.hex`);
+export function getOutputObjectFileUri(project: Project): Uri {
+    return getOutputFileUri(project, `${project.assembler.outBaseFilename}.hex`);
 }
 
-export async function getOutputListFileUri(project: Project): Promise<Uri> {
-    return await getOutputFileUri(project, `${project.assembler.outBaseFilename}.lst`);
+export function getOutputListFileUri(project: Project): Uri {
+    return getOutputFileUri(project, `${project.assembler.outBaseFilename}.lst`);
 }
 
-export async function getOutputMapFileUri(project: Project): Promise<Uri> {
-    return await getOutputFileUri(project, `${project.assembler.outBaseFilename}.map`);
+export function getOutputMapFileUri(project: Project): Uri {
+    return getOutputFileUri(project, `${project.assembler.outBaseFilename}.map`);
 }
 
-export async function getOutputKccFileUri(project: Project): Promise<Uri> {
-    return await getOutputFileUri(project, `${project.assembler.outBaseFilename}.kcc`);
+export function getOutputKccFileUri(project: Project): Uri {
+    return getOutputFileUri(project, `${project.assembler.outBaseFilename}.kcc`);
 }

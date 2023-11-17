@@ -8,6 +8,7 @@ import {
     uriToWasmPath,
     dirExists,
     fileExists,
+    ensureBuildDir,
     getMainSourceUri,
     getSourceDirUri,
     getOutputListFileUri,
@@ -65,6 +66,7 @@ type AssembleResult = {
 
 export async function assemble(ext: ExtensionContext, project: Project, options: AssembleOptions): Promise<AssembleResult> {
     const { genListingFile, genObjectFile, genMapFile } = options;
+    await ensureBuildDir(project);
     const srcDirUri = getSourceDirUri(project);
     if (!(await dirExists(srcDirUri))) {
         throw new Error(`Project source directory '${srcDirUri.fsPath}' not found!`);
@@ -73,15 +75,15 @@ export async function assemble(ext: ExtensionContext, project: Project, options:
     if (!(await fileExists(mainSrcUri))) {
         throw new Error(`Project main file '${mainSrcUri.fsPath}' not found!`);
     }
-    const lstUri = await getOutputListFileUri(project);
+    const lstUri = getOutputListFileUri(project);
     if (genListingFile) {
         try { await workspace.fs.delete(lstUri); } catch (err) {};
     }
-    const mapUri = await getOutputMapFileUri(project);
+    const mapUri = getOutputMapFileUri(project);
     if (genMapFile) {
         try { await workspace.fs.delete(mapUri); } catch (err) {};
     }
-    const objUri = await getOutputObjectFileUri(project);
+    const objUri = getOutputObjectFileUri(project);
     if (genObjectFile) {
         try { await workspace.fs.delete(objUri); } catch (err) {};
     }
@@ -106,10 +108,10 @@ export async function assemble(ext: ExtensionContext, project: Project, options:
     };
 }
 
-export async function writeOutputFile(project: Project, hexUri: Uri) {
+export async function writeOutputFile(project: Project, hexUri: Uri, withAutoStart: boolean) {
     const hexData = await readTextFile(hexUri);
-    const kcc = hexToKcc(hexData, true);
-    const uri = await getOutputKccFileUri(project);
+    const kcc = hexToKcc(hexData, withAutoStart);
+    const uri = getOutputKccFileUri(project);
     await writeBinaryFile(uri, kcc);
     return uri;
 }

@@ -32,7 +32,7 @@ function init() {
         switch (msg.cmd) {
             case 'boot': boot(); break;
             case 'reset': reset(); break;
-            case 'loadkcc': loadkcc(msg.kcc); break;
+            case 'loadkcc': loadkcc(msg.kcc, msg.start, msg.stopOnEntry); break;
             default: console.log('unknown cmd called'); break;
         }
     });
@@ -49,13 +49,18 @@ function reset() {
     Module._webapi_reset();
 }
 
-function loadkcc(buf /*ArrayBuffer*/) {
+/**
+ * @param {ArrayBuffer} buf
+ * @param {boolean} start
+ * @param {boolean} stopOnEntry
+ */
+function loadkcc(buf, start, stopOnEntry) {
     const kcc = new Uint8Array(buf);
     const size = kcc.length;
-    console.log(`### loadkcc called (size: ${size})`);
+    console.log(`### loadkcc called (size: ${size}, start: ${start}, stopOnEntry: ${stopOnEntry})`);
     console.log(kcc);
     const ptr = Module._webapi_alloc(size);
     Module.HEAPU8.set(kcc, ptr);
-    Module._webapi_quickload(ptr, size);
+    Module._webapi_quickload(ptr, size, start ? 1:0, stopOnEntry ? 1:0);
     Module._webapi_free(ptr);
 }
