@@ -1,12 +1,28 @@
-import { ExtensionContext, Uri, ProviderResult, DebugAdapterDescriptor } from 'vscode';
-import { DebugSession, InitializedEvent, StoppedEvent, BreakpointEvent, Breakpoint, Thread, Scope } from '@vscode/debugadapter';
+import {
+    workspace,
+    ExtensionContext,
+    Uri,
+    ProviderResult,
+    DebugAdapterDescriptor
+} from 'vscode';
+import {
+    DebugSession,
+    InitializedEvent,
+    StoppedEvent,
+    BreakpointEvent,
+    Breakpoint,
+    ContinuedEvent,
+    Scope,
+    Thread,
+} from '@vscode/debugadapter';
 import { DebugProtocol } from '@vscode/debugprotocol';
 import * as vscode from 'vscode';
 import { EventEmitter } from 'events';
 // @ts-ignore
 import { Subject } from 'await-notify';
 import { Project } from './types';
-import { readBinaryFile, getOutputMapFileUri } from './filesystem';
+import { readBinaryFile, readTextFile, getOutputMapFileUri } from './filesystem';
+import { requireProjectUri } from './project';
 import * as emu from './emu';
 
 interface ILaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
@@ -23,8 +39,9 @@ interface IAttachRequestArguments extends ILaunchRequestArguments { };
 interface IRuntimeBreakpoint {
     id: number,
     path: string,
+    workspaceRelativePath: string,
     line: number,
-    addr: number,
+    addr: number | null,
     verified: boolean,
 };
 
@@ -58,6 +75,7 @@ class KCIDEDebugAdapterFactory implements vscode.DebugAdapterDescriptorFactory {
 class KCIDEDebugSession extends DebugSession {
 
     private static threadId = 1;
+    private curStackFrameId: number = 1;
     private configurationDone = new Subject();
     private runtime: KCIDEDebugRuntime;
 
@@ -76,7 +94,9 @@ class KCIDEDebugSession extends DebugSession {
         this.runtime.on('breakpointValidated', (bp: IRuntimeBreakpoint) => {
             this.sendEvent(new BreakpointEvent('changed', { verified: bp.verified, id: bp.id }));
         });
-        // FIXME?
+        this.runtime.on('continued', () => {
+            this.sendEvent(new ContinuedEvent(KCIDEDebugSession.threadId));
+        });
         this.setDebuggerLinesStartAt1(true);
         this.setDebuggerColumnsStartAt1(true);
     }
@@ -90,7 +110,6 @@ class KCIDEDebugSession extends DebugSession {
         response.body.supportSuspendDebuggee = true;
         response.body.supportTerminateDebuggee = true;
         this.sendResponse(response);
-        this.sendEvent(new InitializedEvent());
     }
 
     protected configurationDoneRequest(response: DebugProtocol.ConfigurationDoneResponse, args: DebugProtocol.ConfigurationDoneArguments): void {
@@ -101,6 +120,7 @@ class KCIDEDebugSession extends DebugSession {
 
     protected disconnectRequest(_response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, _request?: DebugProtocol.Request): void {
         console.log(`=> KCIDEDebugSession.disconnectRequest suspend: ${args.suspendDebuggee}, terminate: ${args.terminateDebuggee}`);
+        this.runtime.disconnect();
     }
 
     protected async attachRequest(response: DebugProtocol.AttachResponse, args: IAttachRequestArguments): Promise<void> {
@@ -110,9 +130,13 @@ class KCIDEDebugSession extends DebugSession {
 
     protected async launchRequest(response: DebugProtocol.LaunchResponse, args: ILaunchRequestArguments): Promise<void> {
         console.log('=> KCIDEDebugSession.launchRequest');
+        await this.runtime.loadMapFile(Uri.file(args.mapFile));
+        // debug adapter can start sending breakpoints now
+        this.sendEvent(new InitializedEvent());
+        // wait until breakpoints are configured
         // @ts-ignore
         await this.configurationDone.wait();
-        await this.runtime.start(args);
+        await this.runtime.launch(args);
         this.sendResponse(response);
     }
 
@@ -178,11 +202,34 @@ class KCIDEDebugSession extends DebugSession {
         _request?: DebugProtocol.Request | undefined
     ): void {
         console.log('=> KCIDEDebugSession.stackTraceRequest');
-        response.body.stackFrames = [];
+        const curLocation = this.runtime.getCurrentLocation();
+        if (curLocation === undefined) {
+            response.body = {
+                stackFrames: [],
+                totalFrames: 0,
+            };
+        } else {
+            this.curStackFrameId += 1;
+            response.body = {
+                stackFrames: [
+                    {
+                        id: this.curStackFrameId,
+                        name: 'current',    // FIXME: could be name of nearest label
+                        source: {
+                            name: curLocation.source.split('/').pop(),
+                            path: curLocation.source,
+                        },
+                        line: curLocation.line,
+                        column: 0,
+                    },
+                ],
+                totalFrames: 1,
+            };
+        }
         this.sendResponse(response);
     }
 
-    protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
+    protected scopesRequest(response: DebugProtocol.ScopesResponse, _args: DebugProtocol.ScopesArguments): void {
         console.log('=> KCIDEDebugSession.scopesRequest');
         response.body = {
             scopes: [
@@ -207,24 +254,88 @@ class KCIDEDebugSession extends DebugSession {
     }
 }
 
-class KCIDEDebugRuntime extends EventEmitter {
+export class KCIDEDebugRuntime extends EventEmitter {
 
+    private static readonly wasmFsRoot = '/workspace/';
+    private nativeFsRoot = '';
+    private static self: KCIDEDebugRuntime | null = null;
+    private sourceToAddr: Record<string, Array<number>> = {};
+    private addrToSource: Array<{ source: string, line: number }> = [];
     private breakpoints: Array<IRuntimeBreakpoint> = [];
     private breakpointId: number = 1;
+    private curAddr: number | null = null;
 
-    public async start(args: ILaunchRequestArguments): Promise<void> {
+    // called first right before start()
+    public async loadMapFile(uri: Uri) {
+        this.nativeFsRoot = requireProjectUri().path + '/';
+        const lines = await readTextFile(uri);
+        const wasmFsRootIndex = KCIDEDebugRuntime.wasmFsRoot.length;
+        lines.split('\n').forEach((line) => {
+            const parts = line.trim().split(':');
+            if (parts.length !== 3) {
+                return;
+            }
+            // removing leading '/workspace/'
+            const pathStr = parts[0].slice(wasmFsRootIndex);
+            const lineNr = parseInt(parts[1]);
+            const addr = parseInt(parts[2]);
+            if (this.sourceToAddr[pathStr] === undefined) {
+                this.sourceToAddr[pathStr] = [];
+            }
+            this.sourceToAddr[pathStr][lineNr] = addr;
+            this.addrToSource[addr] = { source: pathStr, line: lineNr };
+        });
+    }
+
+    public async launch(args: ILaunchRequestArguments): Promise<void> {
+        KCIDEDebugRuntime.self = this;
         const kcc = await readBinaryFile(Uri.file(args.program));
         await emu.loadKcc(kcc, true, args.stopOnEntry);
-        if (!args.noDebug) {
-            this.verifyBreakpoints();
-            if (args.stopOnEntry) {
-                this.sendEvent('stopOnEntry');
-            } else {
-                this.continue();
-            }
-        } else {
-            this.continue();
+    }
+
+    public disconnect() {
+        KCIDEDebugRuntime.self = null;
+    }
+
+    public static onEmulatorMessage(msg: any) {
+        console.log(`KCIDEDebugRuntime.onEmulatorMessage: ${JSON.stringify(msg)}`);
+        if (KCIDEDebugRuntime.self === null) {
+            console.log('KCIDEDebugRuntime.onEmulatorMessage: self is null');
+            return;
         }
+        // see media/shell.js/init()
+        switch (msg.command) {
+            case 'emu_stopped':
+                KCIDEDebugRuntime.self.onEmulatorStopped(msg.breakType, msg.addr);
+                break;
+            case 'emu_continued':
+                KCIDEDebugRuntime.self.onEmulatorContinued();
+                break;
+        }
+    }
+
+    private onEmulatorStopped(_breakType: number, addr: number) {
+        this.curAddr = addr;
+        // fixme: check if address matches a breakpoint and send different message
+        this.sendEvent('stopOnBreakpoint');
+    }
+
+    private onEmulatorContinued() {
+        this.sendEvent('continued');
+    }
+
+    public getCurrentLocation(): { source: string, line: number } | undefined {
+        if (this.curAddr === null) {
+            return undefined;
+        }
+        const loc = this.addrToSource[this.curAddr];
+        if (loc === undefined) {
+            return undefined;
+        }
+        return {
+            source: this.nativeFsRoot + loc.source,
+            line: loc.line,
+        };
     }
 
     public continue() {
@@ -244,19 +355,32 @@ class KCIDEDebugRuntime extends EventEmitter {
     }
 
     public setBreakpoint(path: string, line: number): IRuntimeBreakpoint {
+        let workspaceRelativePath;
+        if (path.startsWith(this.nativeFsRoot)) {
+            workspaceRelativePath = path.slice(this.nativeFsRoot.length);
+        } else {
+            console.log(`KCIDEDebugAdapter.setBreakpoint(): incoming path ${path} doesn't start with ${this.nativeFsRoot}`);
+            workspaceRelativePath = path;
+        }
+        let addr = null;
+        if (this.sourceToAddr[workspaceRelativePath] !== undefined) {
+            addr = this.sourceToAddr[workspaceRelativePath][line];
+        }
         const bp: IRuntimeBreakpoint = {
-            verified: false,
+            verified: addr !== null,
             path,
+            workspaceRelativePath,
             line,
-            addr: 0x200,    // FIXME: map path+line to address
+            addr, // may be undefined
             id: this.breakpointId++
         };
         this.breakpoints.push(bp);
-        this.verifyBreakpoints();
+        this.sendEvent('breakpointValidated', bp);
         return bp;
     }
 
     public clearBreakpoint(path: string, line: number): IRuntimeBreakpoint | undefined {
+        // FIXME
         const index = this.breakpoints.findIndex((item) => (item.path === path) && (item.line === line));
         if (index >= 0) {
             const bp = this.breakpoints[index];
@@ -268,14 +392,8 @@ class KCIDEDebugRuntime extends EventEmitter {
     }
 
     public clearBreakpoints(path: string): void {
+        // FIXME
         this.breakpoints = this.breakpoints.filter((item) => (item.path !== path));
-    }
-
-    private verifyBreakpoints(): void {
-        this.breakpoints.forEach((bp) => {
-            bp.verified = true;
-            this.sendEvent('breakpointValidated', bp);
-        });
     }
 
     private sendEvent(event: string, ...args: any[]): void {

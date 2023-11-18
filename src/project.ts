@@ -16,7 +16,7 @@ export const projectDefaults: Omit<Project, 'uri'> = {
     }
 };
 
-function requireProjectUri(): Uri {
+export function requireProjectUri(): Uri {
     if (workspace.workspaceFolders === undefined) {
         throw new Error('Please open a Folder!');
     }

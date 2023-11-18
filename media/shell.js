@@ -36,6 +36,15 @@ function init() {
             default: console.log('unknown cmd called'); break;
         }
     });
+    Module.vsCodeApi = acquireVsCodeApi();
+    Module.webapi_onStopped = (break_type, addr) => {
+        console.log(`shell.html: onStopped event received: break_type=${break_type}, addr=${addr}`);
+        Module.vsCodeApi.postMessage({ command: 'emu_stopped', breakType: break_type, addr: addr });
+    };
+    Module.webapi_onContinued = () => {
+        console.log('shell.html: onContinued event received');
+        Module.vsCodeApi.postMessage({ command: 'emu_continued' });
+    };
     Module._webapi_disable_speaker_icon();
 };
 
