@@ -88,3 +88,27 @@ export async function bootEmulator() {
 export async function resetEmulator() {
     await state!.panel.webview.postMessage({ cmd: 'reset' });
 }
+
+export async function dbgAddBreakpoint(addr: number) {
+    await state!.panel.webview.postMessage({ cmd: 'addBreakpoint', addr });
+}
+
+export async function dbgRemoveBreakpoint(addr: number) {
+    await state!.panel.webview.postMessage({ cmd: 'removeBreakpoint', addr });
+}
+
+export async function dbgPause() {
+    await state!.panel.webview.postMessage({ cmd: 'pause' });
+}
+
+export async function dbgContinue() {
+    await state!.panel.webview.postMessage({ cmd: 'continue' });
+}
+
+export async function dbgStep() {
+    await state!.panel.webview.postMessage({ cmd: 'step' });
+}
+
+export async function dbgStepIn() {
+    await state!.panel.webview.postMessage({ cmd: 'stepIn' });
+}

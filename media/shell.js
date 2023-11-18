@@ -27,25 +27,32 @@ function id(id) {
 }
 
 function init() {
+    // see emu.ts
     window.addEventListener('message', ev => {
         const msg = ev.data;
         switch (msg.cmd) {
             case 'boot': boot(); break;
             case 'reset': reset(); break;
             case 'loadkcc': loadkcc(msg.kcc, msg.start, msg.stopOnEntry); break;
+            case 'addBreakpoint': dbgAddBreakpoint(msg.addr); break;
+            case 'removeBreakpoint': dbgRemoveBreakpoint(msg.addr); break;
+            case 'pause': dbgPause(); break;
+            case 'continue': dbgContinue(); break;
+            case 'step': dbgStep(); break;
+            case 'stepIn': dbgStepIn(); break;
             default: console.log('unknown cmd called'); break;
         }
     });
     Module.vsCodeApi = acquireVsCodeApi();
-    Module.webapi_onStopped = (break_type, addr) => {
-        console.log(`shell.html: onStopped event received: break_type=${break_type}, addr=${addr}`);
-        Module.vsCodeApi.postMessage({ command: 'emu_stopped', breakType: break_type, addr: addr });
+    Module.webapi_onStopped = (stop_reason, addr) => {
+        console.log(`shell.html: onStopped event received: break_type=${stop_reason}, addr=${addr}`);
+        Module.vsCodeApi.postMessage({ command: 'emu_stopped', stopReason: stop_reason, addr: addr });
     };
     Module.webapi_onContinued = () => {
         console.log('shell.html: onContinued event received');
         Module.vsCodeApi.postMessage({ command: 'emu_continued' });
     };
-    Module._webapi_disable_speaker_icon();
+    Module._webapi_enable_external_debugger();
 };
 
 function boot() {
@@ -72,4 +79,40 @@ function loadkcc(buf, start, stopOnEntry) {
     Module.HEAPU8.set(kcc, ptr);
     Module._webapi_quickload(ptr, size, start ? 1:0, stopOnEntry ? 1:0);
     Module._webapi_free(ptr);
+}
+
+/**
+ * @param {number} addr
+ */
+function dbgAddBreakpoint(addr) {
+    console.log(`### dbgAddBreakpoint called (addr: ${addr})`);
+    Module._webapi_dbg_add_breakpoint(addr);
+}
+
+/**
+ * @param {number} addr
+ */
+function dbgRemoveBreakpoint(addr) {
+    console.log(`### dbgRemoveBreakpoint called (addr: ${addr})`);
+    Module._webapi_dbg_remove_breakpoint(addr);
+}
+
+function dbgPause() {
+    console.log('### dbgPause called');
+    Module._webapi_dbg_break();
+}
+
+function dbgContinue() {
+    console.log('### dbgContinue called');
+    Module._webapi_dbg_continue();
+}
+
+function dbgStep() {
+    console.log('### dbgStep called');
+    Module._webapi_dbg_step_next();
+}
+
+function dbgStepIn() {
+    console.log('### dbgStepIn called');
+    Module._webapi_dbg_step_into();
 }

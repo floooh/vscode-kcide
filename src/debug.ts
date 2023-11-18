@@ -85,6 +85,9 @@ class KCIDEDebugSession extends DebugSession {
         this.runtime.on('stopOnEntry', () => {
             this.sendEvent(new StoppedEvent('entry', KCIDEDebugSession.threadId));
         });
+        this.runtime.on('stopOnPause', () => {
+            this.sendEvent(new StoppedEvent('pause', KCIDEDebugSession.threadId));
+        });
         this.runtime.on('stopOnStep', () => {
             this.sendEvent(new StoppedEvent('step', KCIDEDebugSession.threadId));
         });
@@ -101,7 +104,7 @@ class KCIDEDebugSession extends DebugSession {
         this.setDebuggerColumnsStartAt1(true);
     }
 
-    protected initializeRequest(response: DebugProtocol.InitializeResponse, _args: DebugProtocol.InitializeRequestArguments): void {
+    protected initializeRequest(response: DebugProtocol.InitializeResponse, _args: DebugProtocol.InitializeRequestArguments) {
         console.log('=> KCIDEDebugSession.initializeRequest');
 
         response.body = response.body ?? {};
@@ -123,12 +126,12 @@ class KCIDEDebugSession extends DebugSession {
         this.runtime.disconnect();
     }
 
-    protected async attachRequest(response: DebugProtocol.AttachResponse, args: IAttachRequestArguments): Promise<void> {
+    protected async attachRequest(response: DebugProtocol.AttachResponse, args: IAttachRequestArguments) {
         console.log('=> KCIDEDebugSession.attachRequest');
         await this.launchRequest(response, args);
     }
 
-    protected async launchRequest(response: DebugProtocol.LaunchResponse, args: ILaunchRequestArguments): Promise<void> {
+    protected async launchRequest(response: DebugProtocol.LaunchResponse, args: ILaunchRequestArguments) {
         console.log('=> KCIDEDebugSession.launchRequest');
         await this.runtime.loadMapFile(Uri.file(args.mapFile));
         // debug adapter can start sending breakpoints now
@@ -145,44 +148,57 @@ class KCIDEDebugSession extends DebugSession {
         response: DebugProtocol.SetBreakpointsResponse,
         args: DebugProtocol.SetBreakpointsArguments,
         _request?: DebugProtocol.Request | undefined
-    ): Promise<void> {
+    ) {
         console.log('=> KCIDEDebugSession.setBreakpointsRequest');
         const path = args.source.path!;
         const clientLines = args.lines ?? [];
-        this.runtime.clearBreakpoints(path);
-        const actualBreakpoints = clientLines.map((l) => {
-            const { verified, line, id } = this.runtime.setBreakpoint(path, this.convertClientLineToDebugger(l));
+        await this.runtime.clearBreakpoints(path);
+        const actualBreakpoints = new Array<DebugProtocol.Breakpoint>();
+        for (const l of clientLines) {
+            const { verified, line, id } = await this.runtime.setBreakpoint(path, this.convertClientLineToDebugger(l));
             const bp = new Breakpoint(verified, this.convertDebuggerLineToClient(line)) as DebugProtocol.Breakpoint;
             bp.id = id;
-            return bp;
-        });
+            actualBreakpoints.push(bp);
+        }
         response.body = { breakpoints: actualBreakpoints };
         this.sendResponse(response);
     }
 
-    protected continueRequest(response: DebugProtocol.ContinueResponse, _args: DebugProtocol.ContinueArguments): void {
-        console.log('=> KCIDE.continueRequest');
-        this.runtime.continue();
+    protected async pauseRequest(
+        response: DebugProtocol.PauseResponse,
+        _args: DebugProtocol.PauseArguments,
+        _request?: DebugProtocol.Request | undefined
+    ) {
+        console.log('=> KCIDEDebugSession.pauseRequest');
+        await this.runtime.pause();
         this.sendResponse(response);
     }
 
-    protected nextRequest(response: DebugProtocol.NextResponse, _args: DebugProtocol.NextArguments): void {
-        console.log('=> KCIDE.nextRequest');
-        this.runtime.step();
+    protected async continueRequest(response: DebugProtocol.ContinueResponse, _args: DebugProtocol.ContinueArguments) {
+        console.log('=> KCIDEDebugSession.continueRequest');
+        await this.runtime.continue();
         this.sendResponse(response);
     }
 
-    protected stepInRequest(
+    protected async nextRequest(response: DebugProtocol.NextResponse, _args: DebugProtocol.NextArguments) {
+        console.log('=> KCIDEDebugSession.nextRequest');
+        await this.runtime.step();
+        this.sendResponse(response);
+    }
+
+    protected async stepInRequest(
         response: DebugProtocol.StepInResponse,
         _args: DebugProtocol.StepInArguments,
         _request?: DebugProtocol.Request | undefined
-    ): void {
-        console.log('=> KCIDE.stepInRequest');
+    ) {
+        console.log('=> KCIDEDebusSession.stepInRequest');
+        await this.runtime.stepIn();
         this.sendResponse(response);
     }
 
     protected stepOutRequest(response: DebugProtocol.StepOutResponse, _args: DebugProtocol.StepOutArguments): void {
-        console.log('=> KCIDE.stepOutRequest');
+        console.log('=> KCIDEDebugSession.stepOutRequest');
+        // FIXME: not implemented
         this.sendResponse(response);
     }
 
@@ -214,7 +230,7 @@ class KCIDEDebugSession extends DebugSession {
                 stackFrames: [
                     {
                         id: this.curStackFrameId,
-                        name: 'current',    // FIXME: could be name of nearest label
+                        name: '0x' + curLocation.addr.toString(16).padStart(4, '0'),
                         source: {
                             name: curLocation.source.split('/').pop(),
                             path: curLocation.source,
@@ -233,7 +249,6 @@ class KCIDEDebugSession extends DebugSession {
         console.log('=> KCIDEDebugSession.scopesRequest');
         response.body = {
             scopes: [
-                // FIXME
                 new Scope('Registers', 1, true)
             ]
         };
@@ -247,7 +262,7 @@ class KCIDEDebugSession extends DebugSession {
     ): void {
         console.log('=> KCIDEDebugSession.variablesRequest');
         response.body = {
-            // FIXME
+            // FIXME request registers
             variables: []
         };
         this.sendResponse(response);
@@ -306,7 +321,7 @@ export class KCIDEDebugRuntime extends EventEmitter {
         // see media/shell.js/init()
         switch (msg.command) {
             case 'emu_stopped':
-                KCIDEDebugRuntime.self.onEmulatorStopped(msg.breakType, msg.addr);
+                KCIDEDebugRuntime.self.onEmulatorStopped(msg.stopReason, msg.addr);
                 break;
             case 'emu_continued':
                 KCIDEDebugRuntime.self.onEmulatorContinued();
@@ -314,17 +329,23 @@ export class KCIDEDebugRuntime extends EventEmitter {
         }
     }
 
-    private onEmulatorStopped(_breakType: number, addr: number) {
+    private onEmulatorStopped(stopReason: number, addr: number) {
         this.curAddr = addr;
-        // fixme: check if address matches a breakpoint and send different message
-        this.sendEvent('stopOnBreakpoint');
+        switch (stopReason) {
+            // UI_DBG_STOP_REASON_BREAK
+            case 1: this.sendEvent('stopOnPause'); break;
+            // UI_DBG_STOP_REASON_BREAKPOINT
+            case 2: this.sendEvent('stopOnBreakpoint'); break;
+            // UI_DBG_STOP_REASON_STEP
+            default: this.sendEvent('stopOnStep'); break;
+        }
     }
 
     private onEmulatorContinued() {
         this.sendEvent('continued');
     }
 
-    public getCurrentLocation(): { source: string, line: number } | undefined {
+    public getCurrentLocation(): { source: string, line: number, addr: number } | undefined {
         if (this.curAddr === null) {
             return undefined;
         }
@@ -335,26 +356,31 @@ export class KCIDEDebugRuntime extends EventEmitter {
         return {
             source: this.nativeFsRoot + loc.source,
             line: loc.line,
+            addr: this.curAddr,
         };
     }
 
-    public continue() {
-        // FIXME
+    public async pause() {
+        await emu.dbgPause();
     }
 
-    public step() {
-        this.sendEvent('stopOnStep');
+    public async continue() {
+        await emu.dbgContinue();
     }
 
-    public stepIn() {
-        this.sendEvent('stopOnStep');
+    public async step() {
+        await emu.dbgStep();
+    }
+
+    public async stepIn() {
+        await emu.dbgStepIn();
     }
 
     public stepOut() {
-        this.sendEvent('stopOnStep');
+        // FIXME: not yet implemented
     }
 
-    public setBreakpoint(path: string, line: number): IRuntimeBreakpoint {
+    public async setBreakpoint(path: string, line: number): Promise<IRuntimeBreakpoint> {
         let workspaceRelativePath;
         if (path.startsWith(this.nativeFsRoot)) {
             workspaceRelativePath = path.slice(this.nativeFsRoot.length);
@@ -371,28 +397,37 @@ export class KCIDEDebugRuntime extends EventEmitter {
             path,
             workspaceRelativePath,
             line,
-            addr, // may be undefined
+            addr, // may be null
             id: this.breakpointId++
         };
         this.breakpoints.push(bp);
+        if (addr !== null) {
+            await emu.dbgAddBreakpoint(addr);
+        }
         this.sendEvent('breakpointValidated', bp);
         return bp;
     }
 
-    public clearBreakpoint(path: string, line: number): IRuntimeBreakpoint | undefined {
-        // FIXME
-        const index = this.breakpoints.findIndex((item) => (item.path === path) && (item.line === line));
-        if (index >= 0) {
-            const bp = this.breakpoints[index];
-            this.breakpoints.splice(index, 1);
-            return bp;
-        } else {
-            return undefined;
-        }
-    }
+    //public async clearBreakpoint(path: string, line: number): Promise<IRuntimeBreakpoint | undefined> {
+    //    const index = this.breakpoints.findIndex((item) => (item.path === path) && (item.line === line));
+    //    if (index >= 0) {
+    //        const bp = this.breakpoints[index];
+    //        this.breakpoints.splice(index, 1);
+    //        if (bp.addr !== null) {
+    //            await emu.dbgRemoveBreakpoint(bp.addr);
+    //        }
+    //        return bp;
+    //    } else {
+    //        return undefined;
+    //    }
+    //}
 
-    public clearBreakpoints(path: string): void {
-        // FIXME
+    public async clearBreakpoints(path: string): Promise<void> {
+        for (const bp of this.breakpoints) {
+            if ((bp.path === path) && (bp.addr !== null)) {
+                await emu.dbgRemoveBreakpoint(bp.addr);
+            }
+        }
         this.breakpoints = this.breakpoints.filter((item) => (item.path !== path));
     }
 
