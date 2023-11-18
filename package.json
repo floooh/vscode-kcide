@@ -2,7 +2,7 @@
   "name": "vscode-kcide",
   "displayName": "KC IDE",
   "description": "Assembly IDE for KC85 computers",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "floooh",
   "repository": {
     "type": "git",
@@ -34,7 +34,6 @@
     "workspaceContains:kcide.project.json"
   ],
   "main": "./out/extension.js",
-  "browser": "./dist/web/extension.js",
   "preview": true,
   "contributes": {
     "commands": [
@@ -120,7 +119,7 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile && npm run compile-web",
+    "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "compile-web": "webpack",
     "watch": "tsc -watch -p ./",
