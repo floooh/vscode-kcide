@@ -39,6 +39,7 @@ function init() {
             case 'continue': dbgContinue(); break;
             case 'step': dbgStep(); break;
             case 'stepIn': dbgStepIn(); break;
+            case 'cpuState': dbgCpuState(); break;
             default: console.log('unknown cmd called'); break;
         }
     });
@@ -98,4 +99,34 @@ function dbgStep() {
 
 function dbgStepIn() {
     Module._webapi_dbg_step_into();
+}
+
+function dbgCpuState() {
+    // see chips-test webapi.h/webapi_cpu_state_t
+    const u16idx = Module._webapi_dbg_cpu_state()>>1;
+    let state = { type: 'unknown' };
+    if (Module.HEAPU16[u16idx + 0] === 1) {
+        // must match types.ts/CPUState
+        state = {
+            type: 'Z80',
+            z80: {
+                af:  Module.HEAPU16[u16idx + 1],
+                bc:  Module.HEAPU16[u16idx + 2],
+                de:  Module.HEAPU16[u16idx + 3],
+                hl:  Module.HEAPU16[u16idx + 4],
+                ix:  Module.HEAPU16[u16idx + 5],
+                iy:  Module.HEAPU16[u16idx + 6],
+                sp:  Module.HEAPU16[u16idx + 7],
+                pc:  Module.HEAPU16[u16idx + 8],
+                af2: Module.HEAPU16[u16idx + 9],
+                bc2: Module.HEAPU16[u16idx + 10],
+                de2: Module.HEAPU16[u16idx + 11],
+                hl2: Module.HEAPU16[u16idx + 12],
+                im:  Module.HEAPU16[u16idx + 13],
+                ir:  Module.HEAPU16[u16idx + 14],
+                iff: Module.HEAPU16[u16idx + 15],
+            }
+        };
+    }
+    Module.vsCodeApi.postMessage({ command: 'emu_cpustate', state });
 }

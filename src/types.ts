@@ -27,6 +27,27 @@ export enum CPU { Z80 = 'Z80', M6502 = '6502' };
 export enum System { KC853 = 'KC85/3', KC854 = 'KC85/4' };
 export enum FileType { KCC = 'KCC' };
 
+export type CPUState = {
+    type: CPU | 'unknown',
+    z80: {
+        af: number,
+        bc: number,
+        de: number,
+        hl: number,
+        ix: number,
+        iy: number,
+        sp: number,
+        pc: number,
+        af2: number,
+        bc2: number,
+        de2: number,
+        hl2: number,
+        im: number,
+        ir: number,
+        iff: number,
+    };
+};
+
 export function isValidString(val: unknown): val is string {
     if (typeof val !== 'string') {
         return false;

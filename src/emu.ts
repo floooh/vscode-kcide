@@ -6,7 +6,7 @@ import {
     Uri,
 } from 'vscode';
 import { KCIDEDebugSession } from './debug';
-import { System, Project } from './types';
+import { System, Project, CPUState } from './types';
 import { readTextFile } from './filesystem';
 
 interface State {
@@ -38,6 +38,9 @@ async function setupEmulator(ext: ExtensionContext, project: Project): Promise<S
     });
     panel.webview.onDidReceiveMessage((msg) => {
         console.log(`emu.ts: webpanel message received: ${JSON.stringify(msg)}`);
+        if (msg.command === 'emu_cpustate') {
+            cpuStateResolved(msg.state as CPUState);
+        }
         KCIDEDebugSession.onEmulatorMessage(msg);
     });
 
@@ -107,4 +110,15 @@ export async function dbgStep() {
 
 export async function dbgStepIn() {
     await state!.panel.webview.postMessage({ cmd: 'stepIn' });
+}
+
+let cpuStateResolved: (value: CPUState) => void;
+let cpuStateRejected: (reason?: any) => void;
+
+export async function dbgCpuState(): Promise<CPUState> {
+    await state!.panel.webview.postMessage({ cmd: 'cpuState' });
+    return new Promise<CPUState>((resolve, reject) => {
+        cpuStateResolved = resolve;
+        cpuStateRejected = reject;
+    });
 }

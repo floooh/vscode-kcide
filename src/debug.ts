@@ -17,7 +17,7 @@ import { DebugProtocol } from '@vscode/debugprotocol';
 import * as vscode from 'vscode';
 // @ts-ignore
 import { Subject } from 'await-notify';
-import { Project } from './types';
+import { Project, CPU, CPUState } from './types';
 import { readBinaryFile, readTextFile, getOutputMapFileUri } from './filesystem';
 import { requireProjectUri } from './project';
 import * as emu from './emu';
@@ -250,26 +250,68 @@ export class KCIDEDebugSession extends DebugSession {
         this.sendResponse(response);
     }
 
-    protected scopesRequest(response: DebugProtocol.ScopesResponse, _args: DebugProtocol.ScopesArguments): void {
+    protected scopesRequest(response: DebugProtocol.ScopesResponse, _args: DebugProtocol.ScopesArguments) {
         console.log('=> KCIDEDebugSession.scopesRequest');
         response.body = {
             scopes: [
-                new Scope('Registers', 1, true)
+                new Scope('CPU', 1, false)
             ]
         };
         this.sendResponse(response);
     }
 
-    protected variablesRequest(
+    protected async variablesRequest(
         response: DebugProtocol.VariablesResponse,
         _args: DebugProtocol.VariablesArguments,
         _request?: DebugProtocol.Request
-    ): void {
+    ) {
         console.log('=> KCIDEDebugSession.variablesRequest');
-        response.body = {
-            // FIXME request registers
-            variables: []
-        };
+        const cpuState = await emu.dbgCpuState();
+        const toUint16Var = (name: string, val: number): DebugProtocol.Variable => ({
+            name,
+            value: `0x${val.toString(16).padStart(4, '0')}`,
+            variablesReference: 0,
+        });
+        const toUint8Var = (name: string, val: number): DebugProtocol.Variable => ({
+            name,
+            value: `0x${val.toString(16).padStart(2, '0')}`,
+            variablesReference: 0,
+        });
+        const toBoolVar = (name: string, val: number): DebugProtocol.Variable => ({
+            name,
+            value: (val !== 0) ? 'true' : 'false',
+            variablesReference: 0,
+        });
+        if (cpuState.type === CPU.Z80) {
+            // try/catch just in case cpuState isn't actually a proper CPUState object
+            try {
+                response.body = {
+                    variables: [
+                        toUint16Var('AF', cpuState.z80.af),
+                        toUint16Var('BC', cpuState.z80.bc),
+                        toUint16Var('DE', cpuState.z80.de),
+                        toUint16Var('HL', cpuState.z80.hl),
+                        toUint16Var('IX', cpuState.z80.ix),
+                        toUint16Var('IY', cpuState.z80.iy),
+                        toUint16Var('SP', cpuState.z80.sp),
+                        toUint16Var('PC', cpuState.z80.pc),
+                        toUint16Var('AF\'', cpuState.z80.af2),
+                        toUint16Var('BC\'', cpuState.z80.bc2),
+                        toUint16Var('DE\'', cpuState.z80.de2),
+                        toUint16Var('HL\'', cpuState.z80.hl2),
+                        toUint8Var('IM', cpuState.z80.im),
+                        toUint8Var('I', (cpuState.z80.ir & 0xFF00)>>8),
+                        toUint8Var('R', cpuState.z80.ir & 0xFF),
+                        toBoolVar('IFF1', cpuState.z80.iff & 1),
+                        toBoolVar('IFF2', cpuState.z80.iff & 2)
+                    ]
+                };
+            } catch (err) {
+                response.body = { variables: [] };
+            }
+        } else {
+            response.body = { variables: [] };
+        }
         this.sendResponse(response);
     }
 
