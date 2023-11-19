@@ -54,7 +54,7 @@ export async function start(ext: ExtensionContext, project: Project, kccUri: Uri
         type: 'kcide',
         name: 'Debug',
         request: 'launch',
-        program: kccUri.fsPath,
+        program: kccUri.path,
         mapFile: getOutputMapFileUri(project).path,
         stopOnEntry: !noDebug,
     },
@@ -88,6 +88,7 @@ export class KCIDEDebugSession extends DebugSession {
         KCIDEDebugSession.self = this;
         this.setDebuggerLinesStartAt1(true);
         this.setDebuggerColumnsStartAt1(true);
+        this.nativeFsRoot = requireProjectUri().path + '/';
     }
 
     public static onEmulatorMessage(msg: any) {
@@ -152,7 +153,7 @@ export class KCIDEDebugSession extends DebugSession {
         _request?: DebugProtocol.Request | undefined
     ) {
         console.log('=> KCIDEDebugSession.setBreakpointsRequest');
-        const path = args.source.path!;
+        const path = Uri.file(args.source.path!).path;
         const clearedBreakpoints = this.clearBreakpointsByPath(path);
         const debugProtocolBreakpoints = new Array<DebugProtocol.Breakpoint>();
         const clientLines = args.breakpoints!.map((bp) => bp.line);
@@ -316,7 +317,6 @@ export class KCIDEDebugSession extends DebugSession {
     }
 
     private async loadMapFile(uri: Uri) {
-        this.nativeFsRoot = requireProjectUri().path + '/';
         const lines = await readTextFile(uri);
         const wasmFsRootIndex = KCIDEDebugSession.wasmFsRoot.length;
         lines.split('\n').forEach((line) => {

@@ -42,7 +42,7 @@ function parseDiagnostics(projectUri: Uri, stderr: string | undefined): Diagnost
     if (stderr === undefined) {
         return { diagnostics: [], numErrors: 0, numWarnings: 0 };
     }
-    const pathPrefix = projectUri.fsPath;
+    const pathPrefix = projectUri.path;
     let numErrors = 0;
     let numWarnings = 0;
     const diagnostics: DiagnosticsArray = stderr.split('\n').filter((line) => (line.includes('*** Error:') || line.includes('*** Warning:'))).map((item) => {
