@@ -112,7 +112,38 @@
       {
         "type": "kcide",
         "languages": [ "asm" ],
-        "label": "KC IDE Debugger"
+        "label": "KC IDE Debugger",
+        "configurationAttributes": {
+          "launch": {
+            "properties": {
+              "stopOnEntry": {
+                "type": "boolean",
+                "description": "Automatically stop after launch",
+                "default": true
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "type": "kcide",
+            "request": "launch",
+            "name": "Debug",
+            "stopOnEntry": true
+          }
+        ],
+        "configurationSnippets": [
+          {
+            "label": "KC IDE: Launch",
+            "description": "A new configuration for debugging a KC IDE project.",
+            "body": {
+              "type": "kcide",
+              "request": "launch",
+              "name": "Debug",
+              "stopOnEntry": true
+            }
+          }
+        ]
       }
     ]
   },
