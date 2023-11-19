@@ -2,7 +2,10 @@ import {
     ExtensionContext,
     Uri,
     ProviderResult,
-    DebugAdapterDescriptor
+    DebugAdapterDescriptor,
+    WorkspaceFolder,
+    DebugConfiguration,
+    CancellationToken,
 } from 'vscode';
 import {
     DebugSession,
@@ -18,15 +21,11 @@ import * as vscode from 'vscode';
 // @ts-ignore
 import { Subject } from 'await-notify';
 import { Project, CPU, CPUState } from './types';
-import { readBinaryFile, readTextFile, getOutputMapFileUri } from './filesystem';
-import { requireProjectUri } from './project';
+import { readBinaryFile, readTextFile, getOutputMapFileUri, getOutputKccFileUri } from './filesystem';
+import { requireProjectUri, loadProject } from './project';
 import * as emu from './emu';
 
 interface ILaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
-    /** absolute path to KCC file */
-    program: 'string',
-    /** absolute path to map file */
-    mapFile: 'string',
     /** whether to stop on entry */
     stopOnEntry: boolean,
 };
@@ -43,19 +42,33 @@ interface IRuntimeBreakpoint {
 };
 
 export function activate(ext: ExtensionContext) {
-    //const configProvider = new DebugConfigurationProvider();
-    //ext.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('kcide', configProvider));
-    ext.subscriptions.push(vscode.debug.registerDebugAdapterDescriptorFactory('kcide', new KCIDEDebugAdapterFactory()));
+    ext.subscriptions.push(
+        vscode.debug.registerDebugAdapterDescriptorFactory('kcide', new KCIDEDebugAdapterFactory()),
+        vscode.debug.registerDebugConfigurationProvider('kcide', {
+            resolveDebugConfiguration(_folder: WorkspaceFolder | undefined, config: DebugConfiguration, _token?: CancellationToken): ProviderResult<DebugConfiguration> {
+                // if launch.json is missing or empty and this is a kcide.project.json project
+                // FIXME: should we check for kcide.project.json instead?
+                if ((config.type === undefined) && (config.request === undefined) && (config.name === undefined)) {
+                    const editor = vscode.window.activeTextEditor;
+                    if (editor && (editor.document.languageId === 'asm')) {
+                        config.type = 'kcide';
+                        config.request = 'launch';
+                        config.name = 'Debug (Stop on Entry)';
+                        config.stopOnEntry = true;
+                    }
+                }
+                return config;
+            },
+        }, vscode.DebugConfigurationProviderTriggerKind.Initial)
+    );
 }
 
-export async function start(ext: ExtensionContext, project: Project, kccUri: Uri, noDebug: boolean) {
+export async function start(ext: ExtensionContext, project: Project, noDebug: boolean) {
     await emu.ensureEmulator(ext, project);
     vscode.debug.startDebugging(undefined, {
         type: 'kcide',
         name: 'Debug',
         request: 'launch',
-        program: kccUri.path,
-        mapFile: getOutputMapFileUri(project).path,
         stopOnEntry: !noDebug,
     },
     {
@@ -135,13 +148,16 @@ export class KCIDEDebugSession extends DebugSession {
 
     protected async launchRequest(response: DebugProtocol.LaunchResponse, args: ILaunchRequestArguments) {
         console.log('=> KCIDEDebugSession.launchRequest');
-        await this.loadMapFile(Uri.file(args.mapFile));
-        // debug adapter can start sending breakpoints now
+        const project = await loadProject();
+        const kccUri = getOutputKccFileUri(project);
+        const mapUri = getOutputMapFileUri(project);
+        await this.loadMapFile(mapUri);
+        // we're ready to receive breakpoints now
         this.sendEvent(new InitializedEvent());
         // wait until breakpoints are configured
         // @ts-ignore
         await this.configurationDone.wait();
-        const kcc = await readBinaryFile(Uri.file(args.program));
+        const kcc = await readBinaryFile(kccUri);
         await emu.loadKcc(kcc, true, args.stopOnEntry);
         this.sendResponse(response);
     }

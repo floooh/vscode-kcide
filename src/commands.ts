@@ -55,8 +55,8 @@ export async function asmDebug(ext: ExtensionContext) {
         const result = await assemble(ext, project, { genListingFile: true, genObjectFile: true, genMapFile: true });
         const diagnostics = updateDiagnosticsFromStderr(project.uri, result.stderr);
         if (diagnostics.numErrors === 0) {
-            const kccUri = await writeOutputFile(project, result.objectUri!, true);
-            await debug.start(ext, project, kccUri, false);
+            await writeOutputFile(project, result.objectUri!, true);
+            await debug.start(ext, project, false);
         } else {
             window.showErrorMessage('Assembler returned with errors');
         }

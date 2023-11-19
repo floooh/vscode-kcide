@@ -111,10 +111,8 @@
     "debuggers": [
       {
         "type": "kcide",
-        "languages": [
-          "asm"
-        ],
-        "label": "KC IDE Debug"
+        "languages": [ "asm" ],
+        "label": "KC IDE Debugger"
       }
     ]
   },
