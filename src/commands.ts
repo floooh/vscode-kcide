@@ -50,7 +50,6 @@ export async function asmRun(ext: ExtensionContext) {
 
 export async function asmDebug(ext: ExtensionContext) {
     try {
-        // FIXME FIXME FIXME
         const project = await loadProject();
         const result = await assemble(ext, project, { genListingFile: true, genObjectFile: true, genMapFile: true });
         const diagnostics = updateDiagnosticsFromStderr(project.uri, result.stderr);
