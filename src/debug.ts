@@ -38,7 +38,7 @@ interface IRuntimeBreakpoint {
     path: string,
     workspaceRelativePath: string,
     line: number,
-    addr: number | null,
+    addr: number | null,    // maybe null if breakpoint address is not in source map
     verified: boolean,
 };
 
@@ -153,16 +153,19 @@ export class KCIDEDebugSession extends DebugSession {
     ) {
         console.log('=> KCIDEDebugSession.setBreakpointsRequest');
         const path = args.source.path!;
-        const clientLines = args.lines ?? [];
-        await this.clearBreakpointsByPath(path);
-        const actualBreakpoints = new Array<DebugProtocol.Breakpoint>();
-        for (const l of clientLines) {
-            const { verified, line, id } = await this.setBreakpoint(path, this.convertClientLineToDebugger(l));
-            const bp = new Breakpoint(verified, this.convertDebuggerLineToClient(line)) as DebugProtocol.Breakpoint;
-            bp.id = id;
-            actualBreakpoints.push(bp);
-        }
-        response.body = { breakpoints: actualBreakpoints };
+        const clearedBreakpoints = this.clearBreakpointsByPath(path);
+        const debugProtocolBreakpoints = new Array<DebugProtocol.Breakpoint>();
+        const clientLines = args.breakpoints!.map((bp) => bp.line);
+        clientLines.forEach((l) => {
+            const bp = this.addBreakpoint(path, this.convertClientLineToDebugger(l));
+            const protocolBreakpoint = new Breakpoint(bp.verified, this.convertDebuggerLineToClient(bp.line)) as DebugProtocol.Breakpoint;
+            protocolBreakpoint.id = bp.id;
+            debugProtocolBreakpoints.push(bp);
+        });
+        response.body = { breakpoints: debugProtocolBreakpoints };
+        const removeAddrs = clearedBreakpoints.filter((bp) => (bp.addr !== 0)).map((bp) => bp.addr!);
+        const addAddrs = this.breakpoints.filter((bp) => ((bp.path === path) && (bp.addr !== null))).map((bp) => bp.addr!);
+        await emu.dbgUpdateBreakpoints(removeAddrs, addAddrs);
         this.sendResponse(response);
     }
 
@@ -306,16 +309,13 @@ export class KCIDEDebugSession extends DebugSession {
         };
     }
 
-    private async clearBreakpointsByPath(path: string): Promise<void> {
-        for (const bp of this.breakpoints) {
-            if ((bp.path === path) && (bp.addr !== null)) {
-                await emu.dbgRemoveBreakpoint(bp.addr);
-            }
-        }
+    private clearBreakpointsByPath(path: string): IRuntimeBreakpoint[] {
+        const clearedBreakpoints = this.breakpoints.filter((bp) => (bp.path === path));
         this.breakpoints = this.breakpoints.filter((item) => (item.path !== path));
+        return clearedBreakpoints;
     }
 
-    private async setBreakpoint(path: string, line: number): Promise<IRuntimeBreakpoint> {
+    private addBreakpoint(path: string, line: number): IRuntimeBreakpoint {
         let workspaceRelativePath;
         if (path.startsWith(this.nativeFsRoot)) {
             workspaceRelativePath = path.slice(this.nativeFsRoot.length);
@@ -332,13 +332,10 @@ export class KCIDEDebugSession extends DebugSession {
             path,
             workspaceRelativePath,
             line,
-            addr, // may be null
+            addr,
             id: this.breakpointId++
         };
         this.breakpoints.push(bp);
-        if (addr !== null) {
-            await emu.dbgAddBreakpoint(addr);
-        }
         return bp;
     }
 

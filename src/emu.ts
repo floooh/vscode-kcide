@@ -89,12 +89,8 @@ export async function resetEmulator() {
     await state!.panel.webview.postMessage({ cmd: 'reset' });
 }
 
-export async function dbgAddBreakpoint(addr: number) {
-    await state!.panel.webview.postMessage({ cmd: 'addBreakpoint', addr });
-}
-
-export async function dbgRemoveBreakpoint(addr: number) {
-    await state!.panel.webview.postMessage({ cmd: 'removeBreakpoint', addr });
+export async function dbgUpdateBreakpoints(removeAddrs: number[], addAddrs: number[]) {
+    await state!.panel.webview.postMessage({ cmd: 'updateBreakpoints', removeAddrs, addAddrs });
 }
 
 export async function dbgPause() {
