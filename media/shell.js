@@ -33,6 +33,7 @@ function init() {
         switch (msg.cmd) {
             case 'boot': boot(); break;
             case 'reset': reset(); break;
+            case 'ready': ready(); break;
             case 'loadkcc': loadkcc(msg.kcc, msg.start, msg.stopOnEntry); break;
             case 'updateBreakpoints': dbgUpdateBreakpoints(msg.removeAddrs, msg.addAddrs); break;
             case 'pause': dbgPause(); break;
@@ -59,6 +60,11 @@ function boot() {
 
 function reset() {
     Module._webapi_reset();
+}
+
+function ready() {
+    const result = Module._webapi_ready();
+    Module.vsCodeApi.postMessage({ command: 'emu_ready', isReady: result });
 }
 
 /**

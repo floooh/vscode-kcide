@@ -56,7 +56,7 @@ export async function asmDebug(ext: ExtensionContext) {
         const diagnostics = updateDiagnosticsFromStderr(project.uri, result.stderr);
         if (diagnostics.numErrors === 0) {
             await writeOutputFile(project, result.objectUri!, true);
-            await debug.start(ext, project, false);
+            debug.start(false);
         } else {
             window.showErrorMessage('Assembler returned with errors');
         }
@@ -65,29 +65,29 @@ export async function asmDebug(ext: ExtensionContext) {
     }
 }
 
-export async function openEmulator(ext: ExtensionContext) {
+export async function openEmulator() {
     try {
         const project = await loadProject();
-        await emu.ensureEmulator(ext, project);
+        await emu.ensureEmulator(project);
     } catch (err) {
         window.showErrorMessage((err as Error).message);
     }
 }
 
-export async function bootEmulator(ext: ExtensionContext) {
+export async function bootEmulator() {
     try {
         const project = await loadProject();
-        await emu.ensureEmulator(ext, project);
+        await emu.ensureEmulator(project);
         await emu.bootEmulator();
     } catch (err) {
         window.showErrorMessage((err as Error).message);
     }
 }
 
-export async function resetEmulator(ext: ExtensionContext) {
+export async function resetEmulator() {
     try {
         const project = await loadProject();
-        await emu.ensureEmulator(ext, project);
+        await emu.ensureEmulator(project);
         await emu.resetEmulator();
     } catch (err) {
         window.showErrorMessage((err as Error).message);

@@ -1,4 +1,4 @@
-import { workspace, ExtensionContext, Uri, FileType } from 'vscode';
+import { workspace, extensions, ExtensionContext, Uri, FileType } from 'vscode';
 import { Project } from './types';
 import { requireWasiEnv } from './wasi';
 
@@ -85,4 +85,8 @@ export function getOutputMapFileUri(project: Project): Uri {
 
 export function getOutputKccFileUri(project: Project): Uri {
     return getOutputFileUri(project, `${project.assembler.outBaseFilename}.kcc`);
+}
+
+export function getExtensionUri(): Uri {
+    return extensions.getExtension('floooh.vscode-kcide')!.extensionUri;
 }

@@ -1,23 +1,23 @@
 import {
     window,
-    ExtensionContext,
     WebviewPanel,
     ViewColumn,
     Uri,
 } from 'vscode';
 import { KCIDEDebugSession } from './debug';
 import { System, Project, CPUState } from './types';
-import { readTextFile } from './filesystem';
+import { readTextFile, getExtensionUri } from './filesystem';
 
 interface State {
     panel: WebviewPanel;
     system: System;
+    ready: false;
 };
 
 let state: State | null = null;
 
-async function setupEmulator(ext: ExtensionContext, project: Project): Promise<State> {
-    const rootUri = Uri.joinPath(ext.extensionUri, 'media');
+async function setupEmulator(project: Project): Promise<State> {
+    const rootUri = Uri.joinPath(getExtensionUri(), 'media');
     const panel = window.createWebviewPanel(
         project.emulator.system, // type
         project.emulator.system, // title
@@ -40,6 +40,10 @@ async function setupEmulator(ext: ExtensionContext, project: Project): Promise<S
         console.log(`emu.ts: webpanel message received: ${JSON.stringify(msg)}`);
         if (msg.command === 'emu_cpustate') {
             cpuStateResolved(msg.state as CPUState);
+        } else if (msg.command === 'emu_ready') {
+            if (state) {
+                state.ready = msg.isReady;
+            }
         }
         KCIDEDebugSession.onEmulatorMessage(msg);
     });
@@ -54,7 +58,7 @@ async function setupEmulator(ext: ExtensionContext, project: Project): Promise<S
     const templ = await readTextFile(Uri.joinPath(rootUri, 'shell.html'));
     const html = templ.replace('{{{emu}}}', emuUri.toString()).replace('{{{shell}}}', shellUri.toString());
     panel.webview.html = html;
-    return { panel, system: project.emulator.system };
+    return { panel, system: project.emulator.system, ready: false };
 }
 
 function discardEmulator() {
@@ -64,20 +68,45 @@ function discardEmulator() {
     }
 }
 
-export async function ensureEmulator(ext: ExtensionContext, project: Project) {
+export async function ensureEmulator(project: Project) {
     if (state === null) {
-        state = await setupEmulator(ext, project);
+        state = await setupEmulator(project);
     } else {
         if (state.system !== project.emulator.system) {
             discardEmulator();
-            state = await setupEmulator(ext, project);
+            state = await setupEmulator(project);
         }
         state.panel.reveal(ViewColumn.Two, true);
     }
 }
 
-export async function init(ext: ExtensionContext, project: Project) {
-    await ensureEmulator(ext, project);
+function wait(ms: number): Promise<void> {
+    return new Promise<void>(resolve => setTimeout(resolve, ms));
+}
+
+export async function waitReady(timeoutMs: number): Promise<boolean> {
+    if (state !== null) {
+        state.ready = false;
+    }
+    let t = 0;
+    const dt = 100;
+    while (t < timeoutMs) {
+        // give the webview some time to come up
+        await wait(dt);
+        if (state && (state.ready)) {
+            return true;
+        }
+        const webview = state?.panel?.webview;
+        if (webview) {
+            await webview.postMessage({ cmd: 'ready' });
+        }
+        t += dt;
+    }
+    return false;
+}
+
+export async function init(project: Project) {
+    await ensureEmulator(project);
 }
 
 export async function loadKcc(kcc: Uint8Array, start: boolean, stopOnEntry: boolean) {
@@ -117,8 +146,7 @@ let cpuStateRejected: (reason?: any) => void;
 
 export async function dbgCpuState(): Promise<CPUState> {
     await state!.panel.webview.postMessage({ cmd: 'cpuState' });
-    return new Promise<CPUState>((resolve, reject) => {
+    return new Promise<CPUState>((resolve) => {
         cpuStateResolved = resolve;
-        cpuStateRejected = reject;
     });
 }

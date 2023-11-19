@@ -63,8 +63,7 @@ export function activate(ext: ExtensionContext) {
     );
 }
 
-export async function start(ext: ExtensionContext, project: Project, noDebug: boolean) {
-    await emu.ensureEmulator(ext, project);
+export function start(noDebug: boolean) {
     vscode.debug.startDebugging(undefined, {
         type: 'kcide',
         name: 'Debug',
@@ -152,6 +151,8 @@ export class KCIDEDebugSession extends DebugSession {
         const kccUri = getOutputKccFileUri(project);
         const mapUri = getOutputMapFileUri(project);
         await this.loadMapFile(mapUri);
+        await emu.ensureEmulator(project);
+        const res = await emu.waitReady(5000);
         // we're ready to receive breakpoints now
         this.sendEvent(new InitializedEvent());
         // wait until breakpoints are configured

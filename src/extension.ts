@@ -20,13 +20,13 @@ export async function activate(ext: vscode.ExtensionContext) {
                 await commands.asmDebug(ext);
             }),
             vscode.commands.registerCommand('floooh.kcide.openEmulator', async () => {
-                await commands.openEmulator(ext);
+                await commands.openEmulator();
             }),
             vscode.commands.registerCommand('floooh.kcide.bootEmulator', async () => {
-                await commands.bootEmulator(ext);
+                await commands.bootEmulator();
             }),
             vscode.commands.registerCommand('floooh.kcide.resetEmulator', async () => {
-                await commands.resetEmulator(ext);
+                await commands.resetEmulator();
             }),
         );
         debug.activate(ext);
@@ -34,7 +34,7 @@ export async function activate(ext: vscode.ExtensionContext) {
         // keep this at the end since it may throw when no folder is opened, but this lets the
         // actual extension initialize properly
         const project = await loadProject();
-        await emu.init(ext, project);
+        await emu.init(project);
     } catch (err) {
         vscode.window.showErrorMessage((err as Error).message);
     }
