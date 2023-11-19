@@ -5,7 +5,7 @@ import {
     ViewColumn,
     Uri,
 } from 'vscode';
-import { KCIDEDebugRuntime } from './debug';
+import { KCIDEDebugSession } from './debug';
 import { System, Project } from './types';
 import { readTextFile } from './filesystem';
 
@@ -38,7 +38,7 @@ async function setupEmulator(ext: ExtensionContext, project: Project): Promise<S
     });
     panel.webview.onDidReceiveMessage((msg) => {
         console.log(`emu.ts: webpanel message received: ${JSON.stringify(msg)}`);
-        KCIDEDebugRuntime.onEmulatorMessage(msg);
+        KCIDEDebugSession.onEmulatorMessage(msg);
     });
 
     let emuFilename;

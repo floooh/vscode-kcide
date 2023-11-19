@@ -144,8 +144,7 @@
   },
   "dependencies": {
     "@vscode/debugadapter": "^1.64.0",
-    "@vscode/wasm-wasi": "0.11.0-next.1",
-    "await-notify": "^1.0.1",
-    "events": "^3.3.0"
+    "@vscode/wasm-wasi": "0.13.0-pre.1",
+    "await-notify": "^1.0.1"
   }
 }
