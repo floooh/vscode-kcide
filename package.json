@@ -213,7 +213,7 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run compile && npm run compile-web",
     "compile": "tsc -p ./",
     "compile-web": "webpack",
     "watch": "tsc -watch -p ./",
