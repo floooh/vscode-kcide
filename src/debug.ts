@@ -153,8 +153,8 @@ export class KCIDEDebugSession extends DebugSession {
         const mapUri = getOutputMapFileUri(project);
         await this.loadMapFile(mapUri);
         await emu.ensureEmulator(project);
+        await emu.waitReady(5000);
         await emu.dbgConnect();
-        const res = await emu.waitReady(5000);
         // we're ready to receive breakpoints now
         this.sendEvent(new InitializedEvent());
         // wait until breakpoints are configured
