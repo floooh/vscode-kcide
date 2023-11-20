@@ -1,7 +1,7 @@
 var Module = {
     preRun: [],
     postRun: [
-        () => { init(); }
+        () => { kcide_init(); }
     ],
     print: (() => {
         return (...args) => {
@@ -22,26 +22,22 @@ var Module = {
     monitorRunDependencies: () => { },
 };
 
-function id(id) {
-    return document.getElementById(id);
-}
-
-function init() {
+function kcide_init() {
     // see emu.ts
     window.addEventListener('message', ev => {
         const msg = ev.data;
         switch (msg.cmd) {
-            case 'boot': boot(); break;
-            case 'reset': reset(); break;
-            case 'ready': ready(); break;
-            case 'loadkcc': loadkcc(msg.kcc, msg.start, msg.stopOnEntry); break;
-            case 'updateBreakpoints': dbgUpdateBreakpoints(msg.removeAddrs, msg.addAddrs); break;
-            case 'pause': dbgPause(); break;
-            case 'continue': dbgContinue(); break;
-            case 'step': dbgStep(); break;
-            case 'stepIn': dbgStepIn(); break;
-            case 'cpuState': dbgCpuState(); break;
-            default: console.log('unknown cmd called'); break;
+            case 'boot': kcide_boot(); break;
+            case 'reset': kcide_reset(); break;
+            case 'ready': kcide_ready(); break;
+            case 'loadkcc': kcide_loadkcc(msg.kcc, msg.start, msg.stopOnEntry); break;
+            case 'updateBreakpoints': kcide_dbgUpdateBreakpoints(msg.removeAddrs, msg.addAddrs); break;
+            case 'pause': kcide_dbgPause(); break;
+            case 'continue': kcide_dbgContinue(); break;
+            case 'step': kcide_dbgStep(); break;
+            case 'stepIn': kcide_dbgStepIn(); break;
+            case 'cpuState': kcide_dbgCpuState(); break;
+            default: console.log(`unknown cmd called: ${msg.cmd}`); break;
         }
     });
     Module.vsCodeApi = acquireVsCodeApi();
@@ -54,15 +50,15 @@ function init() {
     Module._webapi_enable_external_debugger();
 };
 
-function boot() {
+function kcide_boot() {
     Module._webapi_boot();
 }
 
-function reset() {
+function kcide_reset() {
     Module._webapi_reset();
 }
 
-function ready() {
+function kcide_ready() {
     const result = Module._webapi_ready();
     Module.vsCodeApi.postMessage({ command: 'emu_ready', isReady: result });
 }
@@ -72,7 +68,7 @@ function ready() {
  * @param {boolean} start
  * @param {boolean} stopOnEntry
  */
-function loadkcc(buf, start, stopOnEntry) {
+function kcide_loadkcc(buf, start, stopOnEntry) {
     const kcc = new Uint8Array(buf);
     const size = kcc.length;
     console.log(kcc);
@@ -86,28 +82,28 @@ function loadkcc(buf, start, stopOnEntry) {
  * @param {number[]} removeAddrs
  * @param {number[]} addAddrs
  */
-function dbgUpdateBreakpoints(removeAddrs, addAddrs) {
+function kcide_dbgUpdateBreakpoints(removeAddrs, addAddrs) {
     removeAddrs.forEach((addr) => Module._webapi_dbg_remove_breakpoint(addr));
     addAddrs.forEach((addr) => Module._webapi_dbg_add_breakpoint(addr));
 }
 
-function dbgPause() {
+function kcide_dbgPause() {
     Module._webapi_dbg_break();
 }
 
-function dbgContinue() {
+function kcide_dbgContinue() {
     Module._webapi_dbg_continue();
 }
 
-function dbgStep() {
+function kcide_dbgStep() {
     Module._webapi_dbg_step_next();
 }
 
-function dbgStepIn() {
+function kcide_dbgStepIn() {
     Module._webapi_dbg_step_into();
 }
 
-function dbgCpuState() {
+function kcide_dbgCpuState() {
     // see chips-test webapi.h/webapi_cpu_state_t
     const u16idx = Module._webapi_dbg_cpu_state()>>1;
     let state = { type: 'unknown' };
