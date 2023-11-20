@@ -110,39 +110,66 @@ export async function init(project: Project) {
 }
 
 export async function loadKcc(kcc: Uint8Array, start: boolean, stopOnEntry: boolean) {
-    await state!.panel.webview.postMessage({ cmd: 'loadkcc', kcc: kcc.buffer, start, stopOnEntry});
+    if (state) {
+        await state.panel.webview.postMessage({ cmd: 'loadkcc', kcc: kcc.buffer, start, stopOnEntry});
+    }
 }
 
 export async function bootEmulator() {
-    await state!.panel.webview.postMessage({ cmd: 'boot' });
+    if (state) {
+        await state.panel.webview.postMessage({ cmd: 'boot' });
+    }
 }
 
 export async function resetEmulator() {
-    await state!.panel.webview.postMessage({ cmd: 'reset' });
+    if (state) {
+        await state.panel.webview.postMessage({ cmd: 'reset' });
+    }
+}
+
+export async function dbgConnect() {
+    if (state) {
+        await state.panel.webview.postMessage({ cmd: 'connect' });
+    }
+}
+
+export async function dbgDisconnect() {
+    if (state) {
+        await state.panel.webview.postMessage({ cmd: 'disconnect' });
+    }
 }
 
 export async function dbgUpdateBreakpoints(removeAddrs: number[], addAddrs: number[]) {
-    await state!.panel.webview.postMessage({ cmd: 'updateBreakpoints', removeAddrs, addAddrs });
+    if (state) {
+        await state.panel.webview.postMessage({ cmd: 'updateBreakpoints', removeAddrs, addAddrs });
+    }
 }
 
 export async function dbgPause() {
-    await state!.panel.webview.postMessage({ cmd: 'pause' });
+    if (state) {
+        await state.panel.webview.postMessage({ cmd: 'pause' });
+    }
 }
 
 export async function dbgContinue() {
-    await state!.panel.webview.postMessage({ cmd: 'continue' });
+    if (state) {
+        await state.panel.webview.postMessage({ cmd: 'continue' });
+    }
 }
 
 export async function dbgStep() {
-    await state!.panel.webview.postMessage({ cmd: 'step' });
+    if (state) {
+        await state.panel.webview.postMessage({ cmd: 'step' });
+    }
 }
 
 export async function dbgStepIn() {
-    await state!.panel.webview.postMessage({ cmd: 'stepIn' });
+    if (state) {
+        await state.panel.webview.postMessage({ cmd: 'stepIn' });
+    }
 }
 
 let cpuStateResolved: (value: CPUState) => void;
-let cpuStateRejected: (reason?: any) => void;
 
 export async function dbgCpuState(): Promise<CPUState> {
     await state!.panel.webview.postMessage({ cmd: 'cpuState' });

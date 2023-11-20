@@ -31,6 +31,8 @@ function kcide_init() {
             case 'reset': kcide_reset(); break;
             case 'ready': kcide_ready(); break;
             case 'loadkcc': kcide_loadkcc(msg.kcc, msg.start, msg.stopOnEntry); break;
+            case 'connect': kcide_dbgConnect(); break;
+            case 'disconnect': kcide_dbgDisconnect(); break;
             case 'updateBreakpoints': kcide_dbgUpdateBreakpoints(msg.removeAddrs, msg.addAddrs); break;
             case 'pause': kcide_dbgPause(); break;
             case 'continue': kcide_dbgContinue(); break;
@@ -47,8 +49,16 @@ function kcide_init() {
     Module.webapi_onContinued = () => {
         Module.vsCodeApi.postMessage({ command: 'emu_continued' });
     };
-    Module._webapi_enable_external_debugger();
+    Module._webapi_dbg_connect();
 };
+
+function kcide_dbgConnect() {
+    Module._webapi_dbg_connect();
+}
+
+function kcide_dbgDisconnect() {
+    Module._webapi_dbg_disconnect();
+}
 
 function kcide_boot() {
     Module._webapi_boot();

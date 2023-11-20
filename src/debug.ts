@@ -142,8 +142,7 @@ export class KCIDEDebugSession extends DebugSession {
         // FIXME: what to do about entry breakpoint... maybe implement a special
         // webapi_dbg_disconnect() command?
         const removeAddrs = this.breakpoints.filter((bp) => (bp.addr !== 0)).map((bp) => bp.addr!);
-        await emu.dbgUpdateBreakpoints(removeAddrs, []);
-        await emu.dbgContinue();
+        await emu.dbgDisconnect();
     }
 
     protected async attachRequest(response: DebugProtocol.AttachResponse, args: IAttachRequestArguments) {
@@ -158,6 +157,7 @@ export class KCIDEDebugSession extends DebugSession {
         const mapUri = getOutputMapFileUri(project);
         await this.loadMapFile(mapUri);
         await emu.ensureEmulator(project);
+        await emu.dbgConnect();
         const res = await emu.waitReady(5000);
         // we're ready to receive breakpoints now
         this.sendEvent(new InitializedEvent());
