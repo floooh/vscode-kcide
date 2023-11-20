@@ -34,6 +34,7 @@
     "workspaceContains:kcide.project.json"
   ],
   "main": "./out/extension.js",
+  "browser": "./dist/extension.js",
   "preview": true,
   "contributes": {
     "commands": [
@@ -173,7 +174,9 @@
     "debuggers": [
       {
         "type": "kcide",
-        "languages": [ "asm" ],
+        "languages": [
+          "asm"
+        ],
         "label": "KC IDE Debugger",
         "configurationAttributes": {
           "launch": {
@@ -236,6 +239,8 @@
   "dependencies": {
     "@vscode/debugadapter": "^1.64.0",
     "@vscode/wasm-wasi": "0.13.0-pre.1",
-    "await-notify": "^1.0.1"
+    "await-notify": "^1.0.1",
+    "process": "^0.11.10",
+    "url": "^0.11.3"
   }
 }
