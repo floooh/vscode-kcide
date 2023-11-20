@@ -4,13 +4,13 @@ var Module = {
         () => { init(); }
     ],
     print: (() => {
-        return (text) => {
-            text = Array.prototype.slice.call(arguments).join(' ');
+        return (...args) => {
+            text = Array.prototype.slice.call(args).join(' ');
             console.log(text);
         };
     })(),
-    printErr: (text) => {
-        text = Array.prototype.slice.call(arguments).join(' ');
+    printErr: (...args) => {
+        text = Array.prototype.slice.call(args).join(' ');
         console.error(text);
     },
     canvas: (() => {
