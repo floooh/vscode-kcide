@@ -138,10 +138,6 @@ export class KCIDEDebugSession extends DebugSession {
 
     protected async disconnectRequest(_response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, _request?: DebugProtocol.Request) {
         console.log(`=> KCIDEDebugSession.disconnectRequest suspend: ${args.suspendDebuggee}, terminate: ${args.terminateDebuggee}`);
-        // clear all emulator breakpoints and ask emulator to continue (in case it is stopped)
-        // FIXME: what to do about entry breakpoint... maybe implement a special
-        // webapi_dbg_disconnect() command?
-        const removeAddrs = this.breakpoints.filter((bp) => (bp.addr !== 0)).map((bp) => bp.addr!);
         await emu.dbgDisconnect();
     }
 
