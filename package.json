@@ -73,6 +73,68 @@
         "title": "Reset Emulator"
       }
     ],
+    "keybindings": [
+      {
+        "command": "",
+        "key": "f1",
+        "when": "activeWebviewPanelId === 'kcide_emu'"
+      },
+      {
+        "command": "",
+        "key": "f2",
+        "when": "activeWebviewPanelId === 'kcide_emu'"
+      },
+      {
+        "command": "",
+        "key": "f3",
+        "when": "activeWebviewPanelId === 'kcide_emu'"
+      },
+      {
+        "command": "",
+        "key": "f4",
+        "when": "activeWebviewPanelId === 'kcide_emu'"
+      },
+      {
+        "command": "",
+        "key": "f5",
+        "when": "activeWebviewPanelId === 'kcide_emu'"
+      },
+      {
+        "command": "",
+        "key": "f6",
+        "when": "activeWebviewPanelId === 'kcide_emu'"
+      },
+      {
+        "command": "",
+        "key": "f7",
+        "when": "activeWebviewPanelId === 'kcide_emu'"
+      },
+      {
+        "command": "",
+        "key": "f8",
+        "when": "activeWebviewPanelId === 'kcide_emu'"
+      },
+      {
+        "command": "",
+        "key": "f9",
+        "when": "activeWebviewPanelId === 'kcide_emu'"
+      },
+      {
+        "command": "",
+        "key": "f10",
+        "when": "activeWebviewPanelId === 'kcide_emu'"
+      },
+      {
+        "command": "",
+        "key": "f11",
+        "when": "activeWebviewPanelId === 'kcide_emu'"
+      },
+      {
+        "command": "",
+        "key": "f12",
+        "when": "activeWebviewPanelId === 'kcide_emu'"
+      }
+    ],
     "jsonValidation": [
       {
         "url": "./media/kcide.project.schema.json",

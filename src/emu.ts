@@ -19,7 +19,7 @@ let state: State | null = null;
 async function setupEmulator(project: Project): Promise<State> {
     const rootUri = Uri.joinPath(getExtensionUri(), 'media');
     const panel = window.createWebviewPanel(
-        project.emulator.system, // type
+        'kcide_emu', // type
         project.emulator.system, // title
         {
             viewColumn: ViewColumn.Two,
