@@ -13,6 +13,7 @@ import {
     StoppedEvent,
     Breakpoint,
     ContinuedEvent,
+    TerminatedEvent,
     Scope,
     Thread,
 } from '@vscode/debugadapter';
@@ -136,9 +137,10 @@ export class KCIDEDebugSession extends DebugSession {
         this.configurationDone.notify();
     }
 
-    protected async disconnectRequest(_response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, _request?: DebugProtocol.Request) {
+    protected async disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, _request?: DebugProtocol.Request) {
         console.log(`=> KCIDEDebugSession.disconnectRequest suspend: ${args.suspendDebuggee}, terminate: ${args.terminateDebuggee}`);
         await emu.dbgDisconnect();
+        this.sendResponse(response);
     }
 
     protected async attachRequest(response: DebugProtocol.AttachResponse, args: IAttachRequestArguments) {
@@ -403,16 +405,22 @@ export class KCIDEDebugSession extends DebugSession {
     private onEmulatorStopped(stopReason: number, addr: number) {
         this.curAddr = addr;
         switch (stopReason) {
-
-            case 1: // UI_DBG_STOP_REASON_BREAK
+            case 1: // WEBAPI_STOPREASON_BREAK
                 this.sendEvent(new StoppedEvent('pause', KCIDEDebugSession.threadId));
                 break;
-            case 2: // UI_DBG_STOP_REASON_BREAKPOINT
+            case 2: // WEBAPI_STOPREASON_BREAKPOINT
                 this.sendEvent(new StoppedEvent('breakpoint', KCIDEDebugSession.threadId));
                 break;
-            default: // ...UI_DBG_STOP_REASON_STEP
+            case 3: // WEBAPI_STOPREASON_STEP
                 this.sendEvent(new StoppedEvent('step', KCIDEDebugSession.threadId));
                 break;
+            case 4: // WEBAPI_STOPREASON_ENTRY
+                this.sendEvent(new StoppedEvent('entry', KCIDEDebugSession.threadId));
+                break;
+            case 5: // WEBAPI_STOPREASON_EXIT
+                this.sendEvent(new TerminatedEvent());
+                break;
+
         }
     }
 
