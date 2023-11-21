@@ -125,8 +125,6 @@ export class KCIDEDebugSession extends DebugSession {
         console.log('=> KCIDEDebugSession.initializeRequest');
         response.body = response.body ?? {};
         response.body.supportsConfigurationDoneRequest = true;
-        response.body.supportsCancelRequest = true;
-        response.body.supportSuspendDebuggee = true;
         response.body.supportTerminateDebuggee = true;
         this.sendResponse(response);
     }
@@ -223,9 +221,10 @@ export class KCIDEDebugSession extends DebugSession {
         this.sendResponse(response);
     }
 
-    protected stepOutRequest(response: DebugProtocol.StepOutResponse, _args: DebugProtocol.StepOutArguments): void {
+    protected async stepOutRequest(response: DebugProtocol.StepOutResponse, _args: DebugProtocol.StepOutArguments) {
         console.log('=> KCIDEDebugSession.stepOutRequest');
-        // FIXME: not implemented
+        // FIXME: stepOut is not implemented, just do a regular step instead
+        await emu.dbgStep();
         this.sendResponse(response);
     }
 
@@ -420,7 +419,6 @@ export class KCIDEDebugSession extends DebugSession {
             case 5: // WEBAPI_STOPREASON_EXIT
                 this.sendEvent(new TerminatedEvent());
                 break;
-
         }
     }
 
