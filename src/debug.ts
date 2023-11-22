@@ -124,6 +124,7 @@ export class KCIDEDebugSession extends DebugSession {
     protected initializeRequest(response: DebugProtocol.InitializeResponse, _args: DebugProtocol.InitializeRequestArguments) {
         console.log('=> KCIDEDebugSession.initializeRequest');
         response.body = response.body ?? {};
+        response.body.supportsDisassembleRequest = true;
         response.body.supportsConfigurationDoneRequest = true;
         response.body.supportTerminateDebuggee = true;
         this.sendResponse(response);
@@ -252,16 +253,18 @@ export class KCIDEDebugSession extends DebugSession {
             };
         } else {
             this.curStackFrameId += 1;
+            const addrStr = '0x' + curLocation.addr.toString(16).padStart(4, '0');
             response.body = {
                 stackFrames: [
                     {
                         id: this.curStackFrameId,
-                        name: '0x' + curLocation.addr.toString(16).padStart(4, '0'),
+                        name: addrStr,
                         source: {
                             name: curLocation.source.split('/').pop(),
                             path: curLocation.source,
                         },
                         line: curLocation.line,
+                        instructionPointerReference: addrStr,
                         column: 0,
                     },
                 ],
@@ -336,6 +339,41 @@ export class KCIDEDebugSession extends DebugSession {
         this.sendResponse(response);
     }
 
+    protected disassembleRequest(
+        response: DebugProtocol.DisassembleResponse,
+        args: DebugProtocol.DisassembleArguments,
+        _request?: DebugProtocol.Request | undefined
+    ): void {
+        const cursorAddr = parseInt(args.memoryReference);
+        const offset = args.instructionOffset ?? 0;
+        const count = args.instructionCount;
+        const startAddr = (cursorAddr + offset) & 0xFFFF;
+        const endAddr = ((cursorAddr + offset) + count) & 0xFFFF;
+        // NOTE! startAddr may now be bigger than end addr!
+        let addr = startAddr;
+        const instructions: DebugProtocol.DisassembledInstruction[] = [];
+        // FIXME: request actual disassembly from emulator
+        while (addr !== endAddr) {
+            const addrStr = '0x' + addr.toString(16).padStart(4, '0');
+            const instr: DebugProtocol.DisassembledInstruction = {
+                address: addrStr,
+                instruction: 'NOP',
+            };
+            const loc = this.getLocationByAddr(addr);
+            if (loc !== undefined) {
+                instr.location = {
+                    name: loc.source.split('/').pop(),
+                    path: loc.source,
+                };
+                instr.line = loc.line;
+            }
+            instructions.push(instr);
+            addr += 1;
+        }
+        response.body = { instructions };
+        this.sendResponse(response);
+    }
+
     private async loadMapFile(uri: Uri) {
         const lines = await readTextFile(uri);
         const wasmFsRootIndex = KCIDEDebugSession.wasmFsRoot.length;
@@ -356,19 +394,23 @@ export class KCIDEDebugSession extends DebugSession {
         });
     }
 
-    private getCurrentLocation(): { source: string, line: number, addr: number } | undefined {
-        if (this.curAddr === null) {
-            return undefined;
-        }
-        const loc = this.mapAddrToSource[this.curAddr];
+    private getLocationByAddr(addr: number): { source: string, line: number, addr: number } | undefined {
+        const loc = this.mapAddrToSource[addr];
         if (loc === undefined) {
             return undefined;
         }
         return {
             source: this.nativeFsRoot + loc.source,
             line: loc.line,
-            addr: this.curAddr,
+            addr,
         };
+    }
+
+    private getCurrentLocation(): { source: string, line: number, addr: number } | undefined {
+        if (this.curAddr === null) {
+            return undefined;
+        }
+        return this.getLocationByAddr(this.curAddr);
     }
 
     private clearBreakpointsByPath(path: string): IRuntimeBreakpoint[] {
