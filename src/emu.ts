@@ -44,8 +44,9 @@ async function setupEmulator(project: Project): Promise<State> {
             if (state) {
                 state.ready = msg.isReady;
             }
+        } else {
+            KCIDEDebugSession.onEmulatorMessage(msg);
         }
-        KCIDEDebugSession.onEmulatorMessage(msg);
     });
 
     let emuFilename;
