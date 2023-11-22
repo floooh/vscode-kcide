@@ -94,7 +94,7 @@ export async function waitReady(timeoutMs: number): Promise<boolean> {
     while (t < timeoutMs) {
         // give the webview some time to come up
         await wait(dt);
-        if (state && (state.ready)) {
+        if (state && state.ready) {
             return true;
         }
         const webview = state?.panel?.webview;
