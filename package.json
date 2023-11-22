@@ -213,7 +213,8 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile && npm run compile-web",
+    "vscode:prepublish": "npm run clean && npm run compile && npm run compile-web",
+    "clean": "rimraf out dist",
     "compile": "tsc -p ./",
     "compile-web": "webpack",
     "watch": "tsc -watch -p ./",
@@ -231,6 +232,7 @@
     "eslint": "^8.52.0",
     "glob": "^10.3.10",
     "mocha": "^10.2.0",
+    "rimraf": "^5.0.5",
     "ts-loader": "^9.5.1",
     "typescript": "^5.2.2",
     "webpack": "^5.89.0",
