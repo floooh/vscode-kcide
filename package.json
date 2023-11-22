@@ -33,7 +33,7 @@
   "activationEvents": [
     "workspaceContains:kcide.project.json"
   ],
-  "main": "./out/extension.js",
+  "main": "./dist/web/extension.js",
   "browser": "./dist/web/extension.js",
   "preview": true,
   "contributes": {
@@ -213,14 +213,12 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run clean && npm run compile && npm run compile-web",
+    "vscode:prepublish": "npm run clean && npm run compile",
     "clean": "rimraf out dist",
-    "compile": "tsc -p ./",
-    "compile-web": "webpack",
-    "watch": "tsc -watch -p ./",
+    "compile": "webpack --mode production",
+    "compile-dev": "webpack --mode development",
     "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts && tsc --noEmit",
-    "test": "node ./out/test/runTest.js"
+    "lint": "eslint src --ext ts && tsc --noEmit"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.3",

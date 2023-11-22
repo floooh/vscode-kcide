@@ -13,7 +13,7 @@ const webExtensionConfig = {
     filename: '[name].js',
     path: path.join(__dirname, './dist/web'),
     libraryTarget: 'commonjs',
-    devtoolModuleFilenameTemplate: '../../[resource-path]'
+    devtoolModuleFilenameTemplate: 'file:///[absolute-resource-path]'
   },
   resolve: {
     mainFields: ['browser', 'module', 'main'], // look for `browser` entry point in imported node modules
@@ -54,6 +54,6 @@ const webExtensionConfig = {
   performance: {
     hints: false
   },
-  devtool: 'nosources-source-map' // create a source map that points to the original source file
+  devtool: 'source-map' // create a source map that points to the original source file
 };
 module.exports = [webExtensionConfig];
