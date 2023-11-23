@@ -149,20 +149,27 @@ export class KCIDEDebugSession extends DebugSession {
 
     protected async launchRequest(response: DebugProtocol.LaunchResponse, args: ILaunchRequestArguments) {
         console.log('=> KCIDEDebugSession.launchRequest');
-        const project = await loadProject();
-        const kccUri = getOutputKccFileUri(project);
-        const mapUri = getOutputMapFileUri(project);
-        await this.loadMapFile(mapUri);
-        await emu.ensureEmulator(project);
-        await emu.waitReady(5000);
-        await emu.dbgConnect();
-        // we're ready to receive breakpoints now
-        this.sendEvent(new InitializedEvent());
-        // wait until breakpoints are configured
-        // @ts-ignore
-        await this.configurationDone.wait();
-        const kcc = await readBinaryFile(kccUri);
-        await emu.loadKcc(kcc, true, args.stopOnEntry);
+        try {
+            const project = await loadProject();
+            const kccUri = getOutputKccFileUri(project);
+            const mapUri = getOutputMapFileUri(project);
+            await this.loadMapFile(mapUri);
+            await emu.ensureEmulator(project);
+            await emu.waitReady(5000);
+            await emu.dbgConnect();
+            // we're ready to receive breakpoints now
+            this.sendEvent(new InitializedEvent());
+            // wait until breakpoints are configured
+            // @ts-ignore
+            await this.configurationDone.wait();
+            const kcc = await readBinaryFile(kccUri);
+            await emu.loadKcc(kcc, true, args.stopOnEntry);
+        } catch (err) {
+            const msg = `Failed to launch debug session (${err})`;
+            vscode.window.showErrorMessage(msg);
+            response.success = false;
+            response.message = msg;
+        }
         this.sendResponse(response);
     }
 

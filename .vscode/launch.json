@@ -8,9 +8,12 @@
     {
       "name": "Run Extension",
       "type": "extensionHost",
+//      "debugWebWorkerHost": true,
+//      "debugWebviews": true,
       "request": "launch",
       "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}"
+        "--extensionDevelopmentPath=${workspaceFolder}",
+//        "--extensionDevelopmentKind=web"
       ],
       "outFiles": [
         "${workspaceFolder}/**/*.js"
