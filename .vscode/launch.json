@@ -8,12 +8,24 @@
     {
       "name": "Run Extension",
       "type": "extensionHost",
-//      "debugWebWorkerHost": true,
-//      "debugWebviews": true,
       "request": "launch",
       "args": [
         "--extensionDevelopmentPath=${workspaceFolder}",
-//        "--extensionDevelopmentKind=web"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/**/*.js"
+      ],
+      "preLaunchTask": "${defaultBuildTask}"
+    },
+    {
+      "name": "Run Web Extension",
+      "type": "extensionHost",
+      "debugWebWorkerHost": true,
+      "debugWebviews": true,
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--extensionDevelopmentKind=web"
       ],
       "outFiles": [
         "${workspaceFolder}/**/*.js"
