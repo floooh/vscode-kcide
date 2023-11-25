@@ -346,37 +346,28 @@ export class KCIDEDebugSession extends DebugSession {
         this.sendResponse(response);
     }
 
-    protected disassembleRequest(
+    protected async disassembleRequest(
         response: DebugProtocol.DisassembleResponse,
         args: DebugProtocol.DisassembleArguments,
         _request?: DebugProtocol.Request | undefined
-    ): void {
+    ) {
         const cursorAddr = parseInt(args.memoryReference);
         const offset = args.instructionOffset ?? 0;
         const count = args.instructionCount;
-        const startAddr = (cursorAddr + offset) & 0xFFFF;
-        const endAddr = ((cursorAddr + offset) + count) & 0xFFFF;
-        // NOTE! startAddr may now be bigger than end addr!
-        let addr = startAddr;
-        const instructions: DebugProtocol.DisassembledInstruction[] = [];
-        // FIXME: request actual disassembly from emulator
-        while (addr !== endAddr) {
-            const addrStr = '0x' + addr.toString(16).padStart(4, '0');
-            const instr: DebugProtocol.DisassembledInstruction = {
-                address: addrStr,
-                instruction: 'NOP',
-            };
-            const loc = this.getLocationByAddr(addr);
-            if (loc !== undefined) {
-                instr.location = {
+        const disasmLines = await emu.requestDisassembly(cursorAddr, offset, count);
+        const instructions = disasmLines.map<DebugProtocol.DisassembledInstruction>((line) => {
+            const loc = this.getLocationByAddr(line.addr);
+            return {
+                address: line.addr.toString(16).padStart(4, '0'),
+                instructionBytes: line.bytes.map((byte) => byte.toString(16).padStart(2, '0')).join(' '),
+                instruction: line.chars,
+                location: (loc === undefined) ? undefined : {
                     name: loc.source.split('/').pop(),
                     path: loc.source,
-                };
-                instr.line = loc.line;
-            }
-            instructions.push(instr);
-            addr += 1;
-        }
+                },
+                line: (loc === undefined) ? undefined : loc.line,
+            };
+        });
         response.body = { instructions };
         this.sendResponse(response);
     }

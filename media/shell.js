@@ -39,6 +39,7 @@ function kcide_init() {
             case 'step': kcide_dbgStep(); break;
             case 'stepIn': kcide_dbgStepIn(); break;
             case 'cpuState': kcide_dbgCpuState(); break;
+            case 'disassemble': kcide_dbgDisassemble(msg.addr, msg.offsetLines, msg.numLines); break;
             default: console.log(`unknown cmd called: ${msg.cmd}`); break;
         }
     });
@@ -81,7 +82,6 @@ function kcide_ready() {
 function kcide_loadkcc(buf, start, stopOnEntry) {
     const kcc = new Uint8Array(buf);
     const size = kcc.length;
-    console.log(kcc);
     const ptr = Module._webapi_alloc(size);
     Module.HEAPU8.set(kcc, ptr);
     Module._webapi_quickload(ptr, size, start ? 1:0, stopOnEntry ? 1:0);
@@ -141,4 +141,34 @@ function kcide_dbgCpuState() {
         };
     }
     Module.vsCodeApi.postMessage({ command: 'emu_cpustate', state });
+}
+
+function kcide_dbgDisassemble(addr, offset_lines, num_lines) {
+    // NOTE: ptr points to an array of webapi_dasm_line_t structs:
+    //
+    //  uint16_t addr;
+    //  uint8_t num_bytes;
+    //  uint8_t num_addr;
+    //  uint8_t bytes[8];
+    //  uint8_t chars[32];
+    //
+    const ptr = Module._webapi_dbg_request_disassembly(addr, offset_lines, num_lines);
+    const result = [];
+    for (let line_idx = 0; line_idx < num_lines; line_idx++) {
+        const p = ptr + line_idx * 44;
+        const addr = Module.HEAPU16[p>>1];
+        const num_bytes = Module.HEAPU8[p + 2];
+        const num_chars = Module.HEAPU8[p + 3];
+        const bytes = [];
+        let chars = '';
+        for (let i = 0; i < num_bytes; i++) {
+            bytes.push(Module.HEAPU8[p + 4 + i]);
+        }
+        for (let i = 0; i < num_chars; i++) {
+            chars += String.fromCharCode(Module.HEAPU8[p + 12 + i]);
+        }
+        result.push({ addr, bytes, chars });
+    }
+    Module._webapi_dbg_release_disassembly(ptr);
+    Module.vsCodeApi.postMessage({ command: 'emu_disassembly', result });
 }

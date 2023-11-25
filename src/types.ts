@@ -48,6 +48,12 @@ export type CPUState = {
     };
 };
 
+export type DisasmLine = {
+    addr: number,
+    bytes: number[],
+    chars: string,
+};
+
 export function isValidString(val: unknown): val is string {
     if (typeof val !== 'string') {
         return false;

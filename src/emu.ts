@@ -5,7 +5,7 @@ import {
     Uri,
 } from 'vscode';
 import { KCIDEDebugSession } from './debug';
-import { System, Project, CPUState } from './types';
+import { System, Project, CPUState, DisasmLine } from './types';
 import { readTextFile, getExtensionUri } from './filesystem';
 
 interface State {
@@ -40,6 +40,8 @@ async function setupEmulator(project: Project): Promise<State> {
         console.log(`emu.ts: webpanel message received: ${JSON.stringify(msg)}`);
         if (msg.command === 'emu_cpustate') {
             cpuStateResolved(msg.state as CPUState);
+        } else if (msg.command === 'emu_disassembly') {
+            disassemblyResolved(msg.result as DisasmLine[]);
         } else if (msg.command === 'emu_ready') {
             if (state) {
                 state.ready = msg.isReady;
@@ -176,5 +178,14 @@ export async function dbgCpuState(): Promise<CPUState> {
     await state!.panel.webview.postMessage({ cmd: 'cpuState' });
     return new Promise<CPUState>((resolve) => {
         cpuStateResolved = resolve;
+    });
+}
+
+let disassemblyResolved: (value: DisasmLine[]) => void;
+
+export async function requestDisassembly(addr: number, offsetLines: number, numLines: number): Promise<DisasmLine[]> {
+    await state!.panel.webview.postMessage({ cmd: 'disassemble', addr, offsetLines, numLines });
+    return new Promise<DisasmLine[]>((resolve) => {
+        disassemblyResolved = resolve;
     });
 }
