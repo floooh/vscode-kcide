@@ -37,7 +37,6 @@ async function setupEmulator(project: Project): Promise<State> {
         state = null;
     });
     panel.webview.onDidReceiveMessage((msg) => {
-        console.log(`emu.ts: webpanel message received: ${JSON.stringify(msg)}`);
         if (msg.command === 'emu_cpustate') {
             cpuStateResolved(msg.state as CPUState);
         } else if (msg.command === 'emu_disassembly') {

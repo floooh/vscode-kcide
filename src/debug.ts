@@ -358,8 +358,10 @@ export class KCIDEDebugSession extends DebugSession {
         const instructions = disasmLines.map<DebugProtocol.DisassembledInstruction>((line) => {
             const loc = this.getLocationByAddr(line.addr);
             return {
-                address: line.addr.toString(16).padStart(4, '0'),
-                instructionBytes: line.bytes.map((byte) => byte.toString(16).padStart(2, '0')).join(' '),
+                // NOTE: the '0x' is required, otherwise the VSCode disassembly view will
+                // skip addresses with characters in them
+                address: '0x' + line.addr.toString(16).padStart(4, '0').toUpperCase(),
+                instructionBytes: line.bytes.map((byte) => byte.toString(16).padStart(2, '0')).join(' ').toUpperCase(),
                 instruction: line.chars,
                 location: (loc === undefined) ? undefined : {
                     name: loc.source.split('/').pop(),
