@@ -16,31 +16,51 @@ import {
     TerminatedEvent,
     Scope,
     Thread,
+    Source,
 } from '@vscode/debugadapter';
 import { DebugProtocol } from '@vscode/debugprotocol';
 import * as vscode from 'vscode';
 // @ts-ignore
 import { Subject } from 'await-notify';
-import { Project, CPU, CPUState } from './types';
+import { CPU } from './types';
 import { readBinaryFile, readTextFile, getOutputMapFileUri, getOutputKccFileUri } from './filesystem';
-import { requireProjectUri, loadProject } from './project';
+import { loadProject, requireProjectUri } from './project';
 import * as emu from './emu';
 
 interface ILaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
-    /** whether to stop on entry */
     stopOnEntry: boolean,
 };
 
 interface IAttachRequestArguments extends ILaunchRequestArguments { };
 
-interface IRuntimeBreakpoint {
+interface ISourceRuntimeBreakpoint {
     id: number,
     path: string,
     workspaceRelativePath: string,
+    source: Source,
     line: number,
-    addr: number | null,    // maybe null if breakpoint address is not in source map
+    addr?: number,    // maybe undefined if breakpoint address is not in source map
     verified: boolean,
 };
+
+interface IInstructionRuntimeBreakpoint {
+    id: number,
+    path?: string,
+    workspaceRelativePath?: string,
+    source?: Source,
+    line?: number,
+    addr: number,
+};
+
+function toUint8String(val: number, noPrefix?: boolean): string {
+    const str = val.toString(16).padStart(2, '0').toUpperCase();
+    return noPrefix ? str : `0x${str}`;
+}
+
+function toUint16String(val: number, noPrefix?: boolean): string {
+    const str = val.toString(16).padStart(4, '0').toUpperCase();
+    return noPrefix ? str: `0x${str}`;
+}
 
 export function activate(ext: ExtensionContext) {
     ext.subscriptions.push(
@@ -84,7 +104,7 @@ class KCIDEDebugAdapterFactory implements vscode.DebugAdapterDescriptorFactory {
 
 export class KCIDEDebugSession extends DebugSession {
 
-    private static self: KCIDEDebugSession | null = null;
+    private static self: KCIDEDebugSession | undefined = undefined;
     private static readonly wasmFsRoot = '/workspace/';
     private static readonly threadId = 1;
     private nativeFsRoot = '';
@@ -92,22 +112,21 @@ export class KCIDEDebugSession extends DebugSession {
     private configurationDone = new Subject();
     private mapSourceToAddr: Record<string, Array<number>> = {};
     private mapAddrToSource: Array<{ source: string, line: number }> = [];
-    private breakpoints: Array<IRuntimeBreakpoint> = [];
+    private sourceBreakpoints: Array<ISourceRuntimeBreakpoint> = [];
+    private instrBreakpoints: Array<IInstructionRuntimeBreakpoint> = [];
     private breakpointId: number = 1;
-    private curAddr: number | null = null;
+    private curAddr: number | undefined = undefined;
 
     public constructor() {
         super();
         KCIDEDebugSession.self = this;
-        this.setDebuggerLinesStartAt1(true);
-        this.setDebuggerColumnsStartAt1(true);
         this.nativeFsRoot = requireProjectUri().path + '/';
     }
 
     public static onEmulatorMessage(msg: any) {
         console.log(`KCIDEDebugSession.onEmulatorMessage: ${JSON.stringify(msg)}`);
-        if (KCIDEDebugSession.self === null) {
-            console.log('KCIDEDebugRuntime.onEmulatorMessage: self is null');
+        if (KCIDEDebugSession.self === undefined) {
+            console.log('KCIDEDebugRuntime.onEmulatorMessage: self is undefined');
             return;
         }
         // see media/shell.js/init()
@@ -125,6 +144,7 @@ export class KCIDEDebugSession extends DebugSession {
         console.log('=> KCIDEDebugSession.initializeRequest');
         response.body = response.body ?? {};
         response.body.supportsDisassembleRequest = true;
+        response.body.supportsInstructionBreakpoints = true;
         response.body.supportsConfigurationDoneRequest = true;
         response.body.supportTerminateDebuggee = true;
         this.sendResponse(response);
@@ -132,7 +152,6 @@ export class KCIDEDebugSession extends DebugSession {
 
     protected configurationDoneRequest(response: DebugProtocol.ConfigurationDoneResponse, args: DebugProtocol.ConfigurationDoneArguments): void {
         super.configurationDoneRequest(response, args);
-        // @ts-ignore
         this.configurationDone.notify();
     }
 
@@ -160,7 +179,6 @@ export class KCIDEDebugSession extends DebugSession {
             // we're ready to receive breakpoints now
             this.sendEvent(new InitializedEvent());
             // wait until breakpoints are configured
-            // @ts-ignore
             await this.configurationDone.wait();
             const kcc = await readBinaryFile(kccUri);
             await emu.loadKcc(kcc, true, args.stopOnEntry);
@@ -173,7 +191,6 @@ export class KCIDEDebugSession extends DebugSession {
         this.sendResponse(response);
     }
 
-    // eslint-disable-next-line require-await
     protected async setBreakPointsRequest(
         response: DebugProtocol.SetBreakpointsResponse,
         args: DebugProtocol.SetBreakpointsArguments,
@@ -181,18 +198,42 @@ export class KCIDEDebugSession extends DebugSession {
     ) {
         console.log('=> KCIDEDebugSession.setBreakpointsRequest');
         const path = Uri.file(args.source.path!).path;
-        const clearedBreakpoints = this.clearBreakpointsByPath(path);
-        const debugProtocolBreakpoints = new Array<DebugProtocol.Breakpoint>();
+        const clearedBreakpoints = this.clearSourceBreakpointsByPath(path);
         const clientLines = args.breakpoints!.map((bp) => bp.line);
-        clientLines.forEach((l) => {
-            const bp = this.addBreakpoint(path, this.convertClientLineToDebugger(l));
-            const protocolBreakpoint = new Breakpoint(bp.verified, this.convertDebuggerLineToClient(bp.line)) as DebugProtocol.Breakpoint;
+        const debugProtocolBreakpoints = clientLines.map<DebugProtocol.Breakpoint>((l) => {
+            const bp = this.addSourceBreakpoint(path, l);
+            const source = this.sourceFromPath(bp.path);
+            const protocolBreakpoint = new Breakpoint(bp.verified, bp.line, 0, source) as DebugProtocol.Breakpoint;
             protocolBreakpoint.id = bp.id;
-            debugProtocolBreakpoints.push(bp);
+            return bp;
+        });
+        response.body = { breakpoints: debugProtocolBreakpoints };
+        const removeAddrs = clearedBreakpoints.filter((bp) => (bp.addr !== undefined)).map((bp) => bp.addr!);
+        const addAddrs = this.getSourceBreakpointsByPath(path).filter((bp) => (bp.addr !== undefined)).map((bp) => bp.addr!);
+        await emu.dbgUpdateBreakpoints(removeAddrs, addAddrs);
+        this.sendResponse(response);
+    }
+
+    protected async setInstructionBreakpointsRequest(
+        response: DebugProtocol.SetInstructionBreakpointsResponse,
+        args: DebugProtocol.SetInstructionBreakpointsArguments,
+        _request?: DebugProtocol.Request | undefined
+    ) {
+        console.log('=> KCIDEDebugSession.setInstructionBreakpointsRequest');
+        const clearedBreakpoints = this.clearInstructionBreakpoints();
+        const debugProtocolBreakpoints = args.breakpoints.map((ibp) => {
+            const bp = this.addInstructionBreakpoint(ibp.instructionReference, ibp.offset ?? 0);
+            const source = this.sourceFromPathOptional(bp.path);
+            const protocolBreakpoint = new Breakpoint(true, bp.line, 0, source) as DebugProtocol.Breakpoint;
+            protocolBreakpoint.id = bp.id;
+            if (bp.addr !== undefined) {
+                protocolBreakpoint.instructionReference = toUint16String(bp.addr);
+            }
+            return protocolBreakpoint;
         });
         response.body = { breakpoints: debugProtocolBreakpoints };
         const removeAddrs = clearedBreakpoints.filter((bp) => (bp.addr !== 0)).map((bp) => bp.addr!);
-        const addAddrs = this.breakpoints.filter((bp) => ((bp.path === path) && (bp.addr !== null))).map((bp) => bp.addr!);
+        const addAddrs = this.instrBreakpoints.map((bp) => bp.addr!);
         await emu.dbgUpdateBreakpoints(removeAddrs, addAddrs);
         this.sendResponse(response);
     }
@@ -250,26 +291,35 @@ export class KCIDEDebugSession extends DebugSession {
         response: DebugProtocol.StackTraceResponse,
         _args: DebugProtocol.StackTraceArguments,
         _request?: DebugProtocol.Request | undefined
-    ): void {
+    ) {
         console.log('=> KCIDEDebugSession.stackTraceRequest');
         const curLocation = this.getCurrentLocation();
         if (curLocation === undefined) {
-            response.body = {
-                stackFrames: [],
-                totalFrames: 0,
-            };
-        } else {
             this.curStackFrameId += 1;
-            const addrStr = '0x' + curLocation.addr.toString(16).padStart(4, '0');
+            const addrStr = toUint16String(this.curAddr!);
             response.body = {
                 stackFrames: [
                     {
                         id: this.curStackFrameId,
                         name: addrStr,
-                        source: {
-                            name: curLocation.source.split('/').pop(),
-                            path: curLocation.source,
-                        },
+                        source: new Source('Unknown Source'),
+                        line: 0,
+                        column: 0,
+                        instructionPointerReference: addrStr,
+                        presentationHint: 'subtle',
+                    }
+                ],
+                totalFrames: 1,
+            };
+        } else {
+            this.curStackFrameId += 1;
+            const addrStr = toUint16String(curLocation.addr);
+            response.body = {
+                stackFrames: [
+                    {
+                        id: this.curStackFrameId,
+                        name: addrStr,
+                        source: this.sourceFromPathOptional(curLocation.path),
                         line: curLocation.line,
                         instructionPointerReference: addrStr,
                         column: 0,
@@ -281,7 +331,7 @@ export class KCIDEDebugSession extends DebugSession {
         this.sendResponse(response);
     }
 
-    protected scopesRequest(response: DebugProtocol.ScopesResponse, _args: DebugProtocol.ScopesArguments) {
+    protected async scopesRequest(response: DebugProtocol.ScopesResponse, _args: DebugProtocol.ScopesArguments) {
         console.log('=> KCIDEDebugSession.scopesRequest');
         response.body = {
             scopes: [
@@ -289,6 +339,7 @@ export class KCIDEDebugSession extends DebugSession {
             ]
         };
         this.sendResponse(response);
+        await this.openDisassemblyViewIfStoppedInUnmappedLocation();
     }
 
     protected async variablesRequest(
@@ -300,12 +351,12 @@ export class KCIDEDebugSession extends DebugSession {
         const cpuState = await emu.dbgCpuState();
         const toUint16Var = (name: string, val: number): DebugProtocol.Variable => ({
             name,
-            value: `0x${val.toString(16).padStart(4, '0')}`,
+            value: toUint16String(val),
             variablesReference: 0,
         });
         const toUint8Var = (name: string, val: number): DebugProtocol.Variable => ({
             name,
-            value: `0x${val.toString(16).padStart(2, '0')}`,
+            value: toUint8String(val),
             variablesReference: 0,
         });
         const toBoolVar = (name: string, val: number): DebugProtocol.Variable => ({
@@ -358,15 +409,12 @@ export class KCIDEDebugSession extends DebugSession {
         const instructions = disasmLines.map<DebugProtocol.DisassembledInstruction>((line) => {
             const loc = this.getLocationByAddr(line.addr);
             return {
-                // NOTE: the '0x' is required, otherwise the VSCode disassembly view will
-                // skip addresses with characters in them
-                address: '0x' + line.addr.toString(16).padStart(4, '0').toUpperCase(),
-                instructionBytes: line.bytes.map((byte) => byte.toString(16).padStart(2, '0')).join(' ').toUpperCase(),
+                // NOTE: make sure the address string starts with `0x`, otherwise the
+                // VSCode debugger view will get confused and skip those lines
+                address: toUint16String(line.addr),
+                instructionBytes: line.bytes.map((byte) => toUint8String(byte, true)).join(' '),
                 instruction: line.chars,
-                location: (loc === undefined) ? undefined : {
-                    name: loc.source.split('/').pop(),
-                    path: loc.source,
-                },
+                location: this.sourceFromPathOptional(loc?.path),
                 line: (loc === undefined) ? undefined : loc.line,
             };
         });
@@ -389,57 +437,108 @@ export class KCIDEDebugSession extends DebugSession {
             if (this.mapSourceToAddr[pathStr] === undefined) {
                 this.mapSourceToAddr[pathStr] = [];
             }
-            this.mapSourceToAddr[pathStr][lineNr] = addr;
+            if (this.mapSourceToAddr[pathStr][lineNr] === undefined) {
+                this.mapSourceToAddr[pathStr][lineNr] = addr;
+            }
             this.mapAddrToSource[addr] = { source: pathStr, line: lineNr };
         });
     }
 
-    private getLocationByAddr(addr: number): { source: string, line: number, addr: number } | undefined {
+    private getLocationByAddr(addr: number): { path: string, line: number, addr: number } | undefined {
         const loc = this.mapAddrToSource[addr];
         if (loc === undefined) {
             return undefined;
         }
         return {
-            source: this.nativeFsRoot + loc.source,
+            path: this.nativeFsRoot + loc.source,
             line: loc.line,
             addr,
         };
     }
 
-    private getCurrentLocation(): { source: string, line: number, addr: number } | undefined {
-        if (this.curAddr === null) {
+    private getWorkspaceRelativePath(path: string): string {
+        if (path.startsWith(this.nativeFsRoot)) {
+            return path.slice(this.nativeFsRoot.length);
+        } else {
+            // FIXME: should this be a hard error?
+            console.log(`KCIDEDebugSession.getWorkspaceRelative(): incoming path ${path} doesn't start with ${this.nativeFsRoot}`);
+            return path;
+        }
+    }
+
+    private sourceFromPath(path: string): Source {
+        const name = this.getWorkspaceRelativePath(path);
+        return new Source(name, path, 0);
+    }
+
+    private sourceFromPathOptional(path: string | undefined): Source | undefined {
+        if (path === undefined) {
+            return undefined;
+        }
+        return this.sourceFromPath(path);
+    }
+
+    private getCurrentLocation(): { path: string, line: number, addr: number } | undefined {
+        if (this.curAddr === undefined) {
             return undefined;
         }
         return this.getLocationByAddr(this.curAddr);
     }
 
-    private clearBreakpointsByPath(path: string): IRuntimeBreakpoint[] {
-        const clearedBreakpoints = this.breakpoints.filter((bp) => (bp.path === path));
-        this.breakpoints = this.breakpoints.filter((item) => (item.path !== path));
+    private clearSourceBreakpointsByPath(path: string): ISourceRuntimeBreakpoint[] {
+        const clearedBreakpoints = this.sourceBreakpoints.filter((bp) => (bp.path === path));
+        this.sourceBreakpoints = this.sourceBreakpoints.filter((bp) => (bp.path !== path));
         return clearedBreakpoints;
     }
 
-    private addBreakpoint(path: string, line: number): IRuntimeBreakpoint {
-        let workspaceRelativePath;
-        if (path.startsWith(this.nativeFsRoot)) {
-            workspaceRelativePath = path.slice(this.nativeFsRoot.length);
-        } else {
-            console.log(`KCIDEDebugAdapter.setBreakpoint(): incoming path ${path} doesn't start with ${this.nativeFsRoot}`);
-            workspaceRelativePath = path;
-        }
-        let addr = null;
+    private getSourceBreakpointsByPath(path: string): ISourceRuntimeBreakpoint[] {
+        return this.sourceBreakpoints.filter((bp) => (bp.path === path));
+    }
+
+    private addSourceBreakpoint(path: string, line: number): ISourceRuntimeBreakpoint {
+        const workspaceRelativePath = this.getWorkspaceRelativePath(path);
+        let addr = undefined;
         if (this.mapSourceToAddr[workspaceRelativePath] !== undefined) {
-            addr = this.mapSourceToAddr[workspaceRelativePath][line] ?? null;
+            addr = this.mapSourceToAddr[workspaceRelativePath][line] ?? undefined;
         }
-        const bp: IRuntimeBreakpoint = {
-            verified: addr !== null,
+        const bp: ISourceRuntimeBreakpoint = {
+            verified: addr !== undefined,
             path,
             workspaceRelativePath,
+            source: this.sourceFromPath(path),
             line,
             addr,
             id: this.breakpointId++
         };
-        this.breakpoints.push(bp);
+        this.sourceBreakpoints.push(bp);
+        return bp;
+    }
+
+    private clearInstructionBreakpoints(): IInstructionRuntimeBreakpoint[] {
+        const clearedBreakpoints = this.instrBreakpoints;
+        this.instrBreakpoints = [];
+        return clearedBreakpoints;
+    }
+
+    private addInstructionBreakpoint(instructionReference: string, offset: number): IInstructionRuntimeBreakpoint {
+        const addr = parseInt(instructionReference) + offset;
+        let workspaceRelativePath;
+        let path;
+        let line;
+        if (this.mapAddrToSource[addr]) {
+            workspaceRelativePath = this.mapAddrToSource[addr].source;
+            path = this.nativeFsRoot + workspaceRelativePath,
+            line = this.mapAddrToSource[addr].line;
+        }
+        const bp: IInstructionRuntimeBreakpoint = {
+            path,
+            workspaceRelativePath,
+            source: this.sourceFromPathOptional(path),
+            line,
+            addr,
+            id: this.breakpointId++,
+        };
+        this.instrBreakpoints.push(bp);
         return bp;
     }
 
@@ -466,5 +565,18 @@ export class KCIDEDebugSession extends DebugSession {
 
     private onEmulatorContinued() {
         this.sendEvent(new ContinuedEvent(KCIDEDebugSession.threadId));
+    }
+
+    // this is a bit of a hack to automatically open the disassembly view when the debugger
+    // is stopped in an unknown location
+    private async openDisassemblyViewIfStoppedInUnmappedLocation() {
+        if ((this.curAddr !== undefined) && (this.mapAddrToSource[this.curAddr] === undefined)) {
+            await vscode.commands.executeCommand('debug.action.openDisassemblyView');
+            const tabs = vscode.window.tabGroups.all.map(tg => tg.tabs).flat();
+            const index = tabs.findIndex((tab) => tab.label === 'Unknown Source');
+            if (index !== -1) {
+                await vscode.window.tabGroups.close(tabs[index]);
+            }
+        }
     }
 }
