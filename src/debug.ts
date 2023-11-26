@@ -364,11 +364,47 @@ export class KCIDEDebugSession extends DebugSession {
             value: (val !== 0) ? 'true' : 'false',
             variablesReference: 0,
         });
+        const toCpuFlags = (name: string, val: number): DebugProtocol.Variable => {
+            const f = val & 0xFF;
+            const z80Flags = (f: number): string => {
+                return [
+                    (f & (1<<7)) ? 'S' : '-',
+                    (f & (1<<6)) ? 'Z' : '-',
+                    (f & (1<<5)) ? 'Y' : '-',
+                    (f & (1<<4)) ? 'H' : '-',
+                    (f & (1<<3)) ? 'X' : '-',
+                    (f & (1<<2)) ? 'V' : '-',
+                    (f & (1<<1)) ? 'N' : '-',
+                    (f & (1<<0)) ? 'C' : '-',
+                ].join('');
+            };
+            /*
+            const m6502Flags = (f: number): string => {
+                return [
+                    (f & (1<<7)) ? 'N' : '-',
+                    (f & (1<<6)) ? 'V' : '-',
+                    (f & (1<<5)) ? 'X' : '-',
+                    (f & (1<<4)) ? 'B' : '-',
+                    (f & (1<<3)) ? 'D' : '-',
+                    (f & (1<<2)) ? 'I' : '-',
+                    (f & (1<<1)) ? 'Z' : '-',
+                    (f & (1<<0)) ? 'C' : '-',
+                ].join('');
+            };
+            */
+            // FIXME: Z80 vs 6502
+            return {
+                name,
+                value: z80Flags(f),
+                variablesReference: 0,
+            };
+        };
         if (cpuState.type === CPU.Z80) {
             // try/catch just in case cpuState isn't actually a proper CPUState object
             try {
                 response.body = {
                     variables: [
+                        toCpuFlags('Flags', cpuState.z80.af),
                         toUint16Var('AF', cpuState.z80.af),
                         toUint16Var('BC', cpuState.z80.bc),
                         toUint16Var('DE', cpuState.z80.de),
