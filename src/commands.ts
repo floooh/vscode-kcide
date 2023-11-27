@@ -13,7 +13,7 @@ export async function asmBuild(ext: ExtensionContext) {
         const diagnostics = updateDiagnosticsFromStderr(project.uri, result.stderr);
         if (diagnostics.numErrors=== 0) {
             const uri = await writeOutputFile(project, result.objectUri!, true);
-            window.showInformationMessage(`Output written to ${uri.fsPath}`);
+            window.showInformationMessage(`Output written to ${uri.path}`);
         }
     } catch (err) {
         window.showErrorMessage((err as Error).message);

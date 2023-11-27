@@ -493,11 +493,9 @@ export class KCIDEDebugSession extends DebugSession {
     }
 
     private getWorkspaceRelativePath(path: string): string {
-        // normalize paths, on Windows this also has consistent device letter casing
-        const fsPath = Uri.file(path).fsPath;
-        const fsRoot = Uri.file(this.nativeFsRoot).fsPath;
-        if (fsPath.startsWith(fsRoot)) {
-            return fsPath.slice(fsRoot.length);
+        // Windows is inconsistant with device letter casing
+        if (path.toLowerCase().startsWith(this.nativeFsRoot.toLowerCase())) {
+            return path.slice(this.nativeFsRoot.length);
         } else {
             // FIXME: should this be a hard error?
             console.log(`KCIDEDebugSession.getWorkspaceRelative(): incoming path ${path} doesn't start with ${this.nativeFsRoot}`);

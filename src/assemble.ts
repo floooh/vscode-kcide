@@ -69,11 +69,11 @@ export async function assemble(ext: ExtensionContext, project: Project, options:
     await ensureBuildDir(project);
     const srcDirUri = getSourceDirUri(project);
     if (!(await dirExists(srcDirUri))) {
-        throw new Error(`Project source directory '${srcDirUri.fsPath}' not found!`);
+        throw new Error(`Project source directory '${srcDirUri.path}' not found!`);
     }
     const mainSrcUri = getMainSourceUri(project);
     if (!(await fileExists(mainSrcUri))) {
-        throw new Error(`Project main file '${mainSrcUri.fsPath}' not found!`);
+        throw new Error(`Project main file '${mainSrcUri.path}' not found!`);
     }
     const lstUri = getOutputListFileUri(project);
     if (genListingFile) {

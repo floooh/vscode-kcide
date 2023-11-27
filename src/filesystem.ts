@@ -36,7 +36,7 @@ export async function writeBinaryFile(uri: Uri, data: Uint8Array) {
 export async function readBinaryFile(uri: Uri): Promise<Uint8Array> {
     const exists = await fileExists(uri);
     if (!exists) {
-        throw new Error(`File not found: ${uri.fsPath}`);
+        throw new Error(`File not found: ${uri.path}`);
     }
     return workspace.fs.readFile(uri);
 }
