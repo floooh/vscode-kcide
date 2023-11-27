@@ -493,8 +493,11 @@ export class KCIDEDebugSession extends DebugSession {
     }
 
     private getWorkspaceRelativePath(path: string): string {
-        if (path.startsWith(this.nativeFsRoot)) {
-            return path.slice(this.nativeFsRoot.length);
+        // normalize paths, on Windows this also has consistent device letter casing
+        const fsPath = Uri.file(path).fsPath;
+        const fsRoot = Uri.file(this.nativeFsRoot).fsPath;
+        if (fsPath.startsWith(fsRoot)) {
+            return fsPath.slice(fsRoot.length);
         } else {
             // FIXME: should this be a hard error?
             console.log(`KCIDEDebugSession.getWorkspaceRelative(): incoming path ${path} doesn't start with ${this.nativeFsRoot}`);
