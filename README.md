@@ -4,9 +4,8 @@ NOTE: WIP, do not use yet!
 
 ## Preliminary Instructions
 
-- currently the following extension dependency must be installed manually as **pre-release** version
-  (automatic installation doesn't work yet because that extension doesn't have a release version yet):
-  https://marketplace.visualstudio.com/items?itemName=ms-vscode.wasm-wasi-core
+- NOTE: always install the pre-release version! This way the required [`ms-vscode.wasm-wasi-core`](https://marketplace.visualstudio.com/items?itemName=ms-vscode.wasm-wasi-core)
+  dependency will install automatically.
 
 - start by opening VSCode in a folder with a file `kcide.project.json` looking like this:
 
