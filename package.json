@@ -72,66 +72,71 @@
         "command": "floooh.kcide.resetEmulator",
         "category": "KCIDE",
         "title": "Reset Emulator"
+      },
+      {
+        "command": "floooh.kcide.focusEmulator",
+        "category": "KCIDE",
+        "title": "Focus Emulator Panel"
       }
     ],
     "keybindings": [
       {
-        "command": "",
+        "command": "floooh.kcide.focusEmulator",
         "key": "f1",
         "when": "activeWebviewPanelId === 'kcide_emu'"
       },
       {
-        "command": "",
+        "command": "floooh.kcide.focusEmulator",
         "key": "f2",
         "when": "activeWebviewPanelId === 'kcide_emu'"
       },
       {
-        "command": "",
+        "command": "floooh.kcide.focusEmulator",
         "key": "f3",
         "when": "activeWebviewPanelId === 'kcide_emu'"
       },
       {
-        "command": "",
+        "command": "floooh.kcide.focusEmulator",
         "key": "f4",
         "when": "activeWebviewPanelId === 'kcide_emu'"
       },
       {
-        "command": "",
+        "command": "floooh.kcide.focusEmulator",
         "key": "f5",
         "when": "activeWebviewPanelId === 'kcide_emu'"
       },
       {
-        "command": "",
+        "command": "floooh.kcide.focusEmulator",
         "key": "f6",
         "when": "activeWebviewPanelId === 'kcide_emu'"
       },
       {
-        "command": "",
+        "command": "floooh.kcide.focusEmulator",
         "key": "f7",
         "when": "activeWebviewPanelId === 'kcide_emu'"
       },
       {
-        "command": "",
+        "command": "floooh.kcide.focusEmulator",
         "key": "f8",
         "when": "activeWebviewPanelId === 'kcide_emu'"
       },
       {
-        "command": "",
+        "command": "floooh.kcide.focusEmulator",
         "key": "f9",
         "when": "activeWebviewPanelId === 'kcide_emu'"
       },
       {
-        "command": "",
+        "command": "floooh.kcide.focusEmulator",
         "key": "f10",
         "when": "activeWebviewPanelId === 'kcide_emu'"
       },
       {
-        "command": "",
+        "command": "floooh.kcide.focusEmulator",
         "key": "f11",
         "when": "activeWebviewPanelId === 'kcide_emu'"
       },
       {
-        "command": "",
+        "command": "floooh.kcide.focusEmulator",
         "key": "f12",
         "when": "activeWebviewPanelId === 'kcide_emu'"
       }

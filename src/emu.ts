@@ -70,6 +70,21 @@ function discardEmulator() {
     }
 }
 
+function wait(ms: number): Promise<void> {
+    return new Promise<void>(resolve => setTimeout(resolve, ms));
+}
+
+export async function focusEmulator(delayMs?: number): Promise<void> {
+    if (state) {
+        if (delayMs !== undefined) {
+            await wait(delayMs);
+        }
+        if (!state.panel.active) {
+            state.panel.reveal();
+        }
+    }
+}
+
 export async function ensureEmulator(project: Project) {
     if (state === null) {
         state = await setupEmulator(project);
@@ -80,10 +95,6 @@ export async function ensureEmulator(project: Project) {
         }
         state.panel.reveal(ViewColumn.Two, true);
     }
-}
-
-function wait(ms: number): Promise<void> {
-    return new Promise<void>(resolve => setTimeout(resolve, ms));
 }
 
 export async function waitReady(timeoutMs: number): Promise<boolean> {

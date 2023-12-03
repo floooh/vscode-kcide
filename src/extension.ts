@@ -28,6 +28,11 @@ export async function activate(ext: vscode.ExtensionContext) {
             vscode.commands.registerCommand('floooh.kcide.resetEmulator', async () => {
                 await commands.resetEmulator();
             }),
+            vscode.commands.registerCommand('floooh.kcide.focusEmulator', () => {
+                // the delay is used for switching back to the emulator
+                // panel after VSCode stole the focus (for instance when debugging)
+                emu.focusEmulator(100);
+            }),
         );
         debug.activate(ext);
 
