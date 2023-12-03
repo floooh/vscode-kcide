@@ -6,7 +6,7 @@ import * as emu from './emu';
 import * as debug from './debug';
 import { readBinaryFile, getOutputMapFileUri } from './filesystem';
 
-export async function asmBuild(ext: ExtensionContext) {
+export async function asmBuild(ext: ExtensionContext): Promise<boolean> {
     try {
         const project = await loadProject();
         const result = await assemble(ext, project, { genListingFile: true, genObjectFile: true, genMapFile: true });
@@ -14,11 +14,14 @@ export async function asmBuild(ext: ExtensionContext) {
         if (diagnostics.numErrors === 0) {
             const uri = await writeOutputFile(project, result.objectUri!, true);
             window.showInformationMessage(`Output written to ${uri.path}`);
+            return true;
         } else {
             window.showErrorMessage(`Build failed with ${diagnostics.numErrors} error(s)`);
+            return false;
         }
     } catch (err) {
         window.showErrorMessage((err as Error).message);
+        return false;
     }
 }
 

@@ -8,7 +8,7 @@ export async function activate(ext: vscode.ExtensionContext) {
     try {
         ext.subscriptions.push(
             vscode.commands.registerCommand('floooh.kcide.build', async () => {
-                await commands.asmBuild(ext);
+                return await commands.asmBuild(ext);
             }),
             vscode.commands.registerCommand('floooh.kcide.check', async () => {
                 await commands.asmCheck(ext);
