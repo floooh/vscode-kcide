@@ -160,7 +160,6 @@
         "aliases": [
           "assembly",
           "z80",
-          "6502",
           "asm"
         ],
         "extensions": [
