@@ -65,22 +65,6 @@ function toUint16String(val: number, noPrefix?: boolean): string {
 export function activate(ext: ExtensionContext) {
     ext.subscriptions.push(
         vscode.debug.registerDebugAdapterDescriptorFactory('kcide', new KCIDEDebugAdapterFactory()),
-        vscode.debug.registerDebugConfigurationProvider('kcide', {
-            resolveDebugConfiguration(_folder: WorkspaceFolder | undefined, config: DebugConfiguration, _token?: CancellationToken): ProviderResult<DebugConfiguration> {
-                // if launch.json is missing or empty and this is a kcide.project.json project
-                // FIXME: should we check for kcide.project.json instead?
-                if ((config.type === undefined) && (config.request === undefined) && (config.name === undefined)) {
-                    const editor = vscode.window.activeTextEditor;
-                    if (editor && (editor.document.languageId === 'asm')) {
-                        config.type = 'kcide';
-                        config.request = 'launch';
-                        config.name = 'Debug (Stop on Entry)';
-                        config.stopOnEntry = true;
-                    }
-                }
-                return config;
-            },
-        }, vscode.DebugConfigurationProviderTriggerKind.Initial)
     );
 }
 
