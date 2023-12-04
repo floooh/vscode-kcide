@@ -127,6 +127,7 @@ export class KCIDEDebugSession extends DebugSession {
     protected initializeRequest(response: DebugProtocol.InitializeResponse, _args: DebugProtocol.InitializeRequestArguments) {
         console.log('=> KCIDEDebugSession.initializeRequest');
         response.body = response.body ?? {};
+        response.body.supportsReadMemoryRequest = true;
         response.body.supportsDisassembleRequest = true;
         response.body.supportsInstructionBreakpoints = true;
         response.body.supportsConfigurationDoneRequest = true;
@@ -337,6 +338,7 @@ export class KCIDEDebugSession extends DebugSession {
             name,
             value: toUint16String(val),
             variablesReference: 0,
+            memoryReference: toUint16String(val),
         });
         const toUint8Var = (name: string, val: number): DebugProtocol.Variable => ({
             name,
@@ -439,6 +441,22 @@ export class KCIDEDebugSession extends DebugSession {
             };
         });
         response.body = { instructions };
+        this.sendResponse(response);
+    }
+
+    protected async readMemoryRequest(
+        response: DebugProtocol.ReadMemoryResponse,
+        args: DebugProtocol.ReadMemoryArguments,
+        _request?: DebugProtocol.Request | undefined
+    ) {
+        const addr = parseInt(args.memoryReference);
+        const offset = args.offset ?? 0;
+        const numBytes = args.count;
+        const bytes = await emu.readMemory(addr, offset, numBytes);
+        response.body = {
+            address: toUint16String(bytes.addr),
+            data: bytes.base64Data,
+        };
         this.sendResponse(response);
     }
 

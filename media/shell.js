@@ -40,6 +40,7 @@ function kcide_init() {
             case 'stepIn': kcide_dbgStepIn(); break;
             case 'cpuState': kcide_dbgCpuState(); break;
             case 'disassemble': kcide_dbgDisassemble(msg.addr, msg.offsetLines, msg.numLines); break;
+            case 'readMemory': kcide_dbgReadMemory(msg.addr, msg.numBytes); break;
             default: console.log(`unknown cmd called: ${msg.cmd}`); break;
         }
     });
@@ -169,6 +170,20 @@ function kcide_dbgDisassemble(addr, offset_lines, num_lines) {
         }
         result.push({ addr, bytes, chars });
     }
-    Module._webapi_dbg_release_disassembly(ptr);
+    Module._webapi_free(ptr);
     Module.vsCodeApi.postMessage({ command: 'emu_disassembly', result });
+}
+
+// result is a base64 encoded string!
+function kcide_dbgReadMemory(addr, numBytes) {
+    const toBase64 = (data) => {
+        return btoa(String.fromCodePoint(...data));
+    };
+    const ptr = Module._webapi_dbg_read_memory(addr, numBytes);
+    const bytes = Module.HEAPU8.slice(ptr, ptr + numBytes);
+    const base64Data = toBase64(bytes);
+    Module._webapi_free(ptr);
+    // type: emu.ts/ReadMemoryResult
+    const result = { addr, base64Data };
+    Module.vsCodeApi.postMessage({ command: 'emu_memory', result });
 }

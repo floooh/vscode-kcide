@@ -41,6 +41,8 @@ async function setupEmulator(project: Project): Promise<State> {
             cpuStateResolved(msg.state as CPUState);
         } else if (msg.command === 'emu_disassembly') {
             disassemblyResolved(msg.result as DisasmLine[]);
+        } else if (msg.command === 'emu_memory') {
+            readMemoryResolved(msg.result as ReadMemoryResult);
         } else if (msg.command === 'emu_ready') {
             if (state) {
                 state.ready = msg.isReady;
@@ -197,5 +199,20 @@ export async function requestDisassembly(addr: number, offsetLines: number, numL
     await state!.panel.webview.postMessage({ cmd: 'disassemble', addr, offsetLines, numLines });
     return new Promise<DisasmLine[]>((resolve) => {
         disassemblyResolved = resolve;
+    });
+}
+
+let readMemoryResolved: (value: ReadMemoryResult) => void;
+
+export type ReadMemoryResult = {
+    addr: number,
+    base64Data: string,
+};
+
+export async function readMemory(addr: number, offset: number, numBytes: number): Promise<ReadMemoryResult> {
+    const resolvedAddr = (addr + offset) & 0xFFFF;
+    await state!.panel.webview.postMessage({ cmd: 'readMemory', addr: resolvedAddr, numBytes });
+    return new Promise<ReadMemoryResult>((resolve) => {
+        readMemoryResolved = resolve;
     });
 }
