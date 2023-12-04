@@ -88,12 +88,12 @@
       {
         "command": "floooh.kcide.build",
         "key": "f7",
-        "when": "(debugState === 'inactive') && (activeWebviewPanel !== 'kcide_emu')"
+        "when": "(editorLangId === 'asm') && (debugState === 'inactive') && (activeWebviewPanel !== 'kcide_emu')"
       },
       {
         "command": "floooh.kcide.debug",
         "key": "f5",
-        "when": "(debugState === 'inactive') && (activeWebviewPanel !== 'kcide_emu')"
+        "when": "(editorLangId === 'asm') && (debugState === 'inactive') && (activeWebviewPanel !== 'kcide_emu')"
       },
       {
         "command": "floooh.kcide.focusEmulator",
