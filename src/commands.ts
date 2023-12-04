@@ -4,7 +4,7 @@ import { loadProject } from './project';
 import { updateDiagnosticsFromStderr } from './diagnostics';
 import * as emu from './emu';
 import * as debug from './debug';
-import { readBinaryFile, getOutputMapFileUri } from './filesystem';
+import { readBinaryFile } from './filesystem';
 
 export async function asmBuild(ext: ExtensionContext) {
     try {

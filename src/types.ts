@@ -1,4 +1,4 @@
-import { Uri, DiagnosticCollection } from 'vscode';
+import { Uri } from 'vscode';
 import { RootFileSystem, Wasm } from '@vscode/wasm-wasi';
 
 export type WasiEnv = {
