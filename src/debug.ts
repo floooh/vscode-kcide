@@ -3,9 +3,6 @@ import {
     Uri,
     ProviderResult,
     DebugAdapterDescriptor,
-    WorkspaceFolder,
-    DebugConfiguration,
-    CancellationToken,
 } from 'vscode';
 import {
     DebugSession,
@@ -105,6 +102,7 @@ export class KCIDEDebugSession extends DebugSession {
         super();
         KCIDEDebugSession.self = this;
         this.nativeFsRoot = requireProjectUri().path + '/';
+        console.log(`debug: nativeFsRoot is ${this.nativeFsRoot}`);
     }
 
     public static onEmulatorMessage(msg: any) {
@@ -181,7 +179,7 @@ export class KCIDEDebugSession extends DebugSession {
         args: DebugProtocol.SetBreakpointsArguments,
         _request?: DebugProtocol.Request | undefined
     ) {
-        console.log('=> KCIDEDebugSession.setBreakpointsRequest');
+        console.log(`=> KCIDEDebugSession.setBreakpointsRequest: args.source.path=${args.source.path}`);
         const path = Uri.file(args.source.path!).path;
         const clearedBreakpoints = this.clearSourceBreakpointsByPath(path);
         const clientLines = args.breakpoints!.map((bp) => bp.line);
@@ -496,6 +494,7 @@ export class KCIDEDebugSession extends DebugSession {
 
     private getWorkspaceRelativePath(path: string): string {
         // Windows is inconsistant with device letter casing
+        console.log(`debug: getWorkspaceRelativePath called with ${path}`);
         if (path.toLowerCase().startsWith(this.nativeFsRoot.toLowerCase())) {
             return path.slice(this.nativeFsRoot.length);
         } else {
@@ -506,6 +505,7 @@ export class KCIDEDebugSession extends DebugSession {
     }
 
     private sourceFromPath(path: string): Source {
+        console.log(`sourceFromPath(${path})`);
         const name = this.getWorkspaceRelativePath(path);
         return new Source(name, path, 0);
     }
