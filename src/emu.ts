@@ -124,10 +124,15 @@ export async function init(project: Project) {
     await ensureEmulator(project);
 }
 
+function toBase64(data: Uint8Array): string {
+    return btoa(String.fromCodePoint(...data));
+}
+
 export async function loadKcc(kcc: Uint8Array, start: boolean, stopOnEntry: boolean) {
     if (state) {
         console.log(`emu.loadKcc called: size: ${kcc.length}, load_addr_l: ${kcc[17]}, load_addr_h: ${kcc[18]}`);
-        await state.panel.webview.postMessage({ cmd: 'loadkcc', kcc: kcc.buffer, start, stopOnEntry});
+        const dataBase64 = toBase64(kcc);
+        await state.panel.webview.postMessage({ cmd: 'loadkcc', kcc: dataBase64, start, stopOnEntry});
     } else {
         console.log('emu.loadKcc: state is null');
     }

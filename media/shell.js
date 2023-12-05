@@ -76,14 +76,18 @@ function kcide_ready() {
 }
 
 /**
- * @param {ArrayBuffer} buf
+ * @param {string} dataBase64
  * @param {boolean} start
  * @param {boolean} stopOnEntry
  */
-function kcide_loadkcc(buf, start, stopOnEntry) {
-    const kcc = new Uint8Array(buf);
+function kcide_loadkcc(dataBase64, start, stopOnEntry) {
+    const binStr = atob(dataBase64);
+    const kcc = new Uint8Array(binStr.length);
+    for (let i = 0; i < binStr.length; i++) {
+        kcc[i] = binStr.charCodeAt(i);
+    }
     const size = kcc.length;
-    console.log(`kcide_loadkcc: buf=${buf}, start=${start}, stopOnEntry=${stopOnEntry}`);
+    console.log(`kcide_loadkcc: kcc=${kcc}, start=${start}, stopOnEntry=${stopOnEntry}`);
     console.log(`kcide_loadkcc: load_addr_l: ${kcc[17]}, load_addr_h: ${kcc[18]}`);
     console.log(`kcide_loadkcc: end_addr_l: ${kcc[19]}, end_addr_h: ${kcc[20]}`);
     console.log(`kcide_loadkcc: exec_addr_l: ${kcc[21]}, exec_addr_h: ${kcc[22]}`);
