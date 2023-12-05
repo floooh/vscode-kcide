@@ -494,7 +494,7 @@ export class KCIDEDebugSession extends DebugSession {
 
     private getWorkspaceRelativePath(path: string): string {
         // Windows is inconsistant with device letter casing
-        console.log(`debug: getWorkspaceRelativePath called with ${path}`);
+        console.log(`KCIDEDebugSession.getWorkspaceRelativePath(${path})`);
         if (path.toLowerCase().startsWith(this.nativeFsRoot.toLowerCase())) {
             return path.slice(this.nativeFsRoot.length);
         } else {
@@ -505,7 +505,7 @@ export class KCIDEDebugSession extends DebugSession {
     }
 
     private sourceFromPath(path: string): Source {
-        console.log(`sourceFromPath(${path})`);
+        console.log(`KCIDEDebugSession.sourceFromPath(${path})`);
         const name = this.getWorkspaceRelativePath(path);
         return new Source(name, path, 0);
     }
@@ -549,7 +549,6 @@ export class KCIDEDebugSession extends DebugSession {
             addr,
             id: this.breakpointId++
         };
-        console.log(`addSourceBreakpoint: path=${path}, workspaceRelativePath=${workspaceRelativePath}, line=${line}, addr=${addr}`);
         this.sourceBreakpoints.push(bp);
         return bp;
     }

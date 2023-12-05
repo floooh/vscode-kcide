@@ -130,11 +130,8 @@ function toBase64(data: Uint8Array): string {
 
 export async function loadKcc(kcc: Uint8Array, start: boolean, stopOnEntry: boolean) {
     if (state) {
-        console.log(`emu.loadKcc called: size: ${kcc.length}, load_addr_l: ${kcc[17]}, load_addr_h: ${kcc[18]}`);
         const dataBase64 = toBase64(kcc);
         await state.panel.webview.postMessage({ cmd: 'loadkcc', kcc: dataBase64, start, stopOnEntry});
-    } else {
-        console.log('emu.loadKcc: state is null');
     }
 }
 
@@ -164,10 +161,7 @@ export async function dbgDisconnect() {
 
 export async function dbgUpdateBreakpoints(removeAddrs: number[], addAddrs: number[]) {
     if (state) {
-        console.log(`emu.dbgUpdateBreakpoints(removeAddrs: ${removeAddrs}, addAddrs: ${addAddrs})`);
         await state.panel.webview.postMessage({ cmd: 'updateBreakpoints', removeAddrs, addAddrs });
-    } else {
-        console.log('emu.dbgUpdateBreakpoints(): state is null');
     }
 }
 
