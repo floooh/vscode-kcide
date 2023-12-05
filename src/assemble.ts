@@ -54,6 +54,7 @@ type AssembleOptions = {
     genListingFile: boolean,
     genObjectFile: boolean,
     genMapFile: boolean,
+    saveAll?: boolean,
 };
 
 type AssembleResult = {
@@ -65,7 +66,10 @@ type AssembleResult = {
 };
 
 export async function assemble(ext: ExtensionContext, project: Project, options: AssembleOptions): Promise<AssembleResult> {
-    const { genListingFile, genObjectFile, genMapFile } = options;
+    const { genListingFile, genObjectFile, genMapFile, saveAll = true } = options;
+    if (saveAll) {
+        workspace.saveAll(false);
+    }
     await ensureBuildDir(project);
     const srcDirUri = getSourceDirUri(project);
     if (!(await dirExists(srcDirUri))) {
