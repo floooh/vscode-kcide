@@ -549,6 +549,7 @@ export class KCIDEDebugSession extends DebugSession {
             addr,
             id: this.breakpointId++
         };
+        console.log(`addSourceBreakpoint: path=${path}, workspaceRelativePath=${workspaceRelativePath}, line=${line}, addr=${addr}`);
         this.sourceBreakpoints.push(bp);
         return bp;
     }

@@ -156,7 +156,10 @@ export async function dbgDisconnect() {
 
 export async function dbgUpdateBreakpoints(removeAddrs: number[], addAddrs: number[]) {
     if (state) {
+        console.log(`dbgUpdateBreakpoints(removeAddrs: ${removeAddrs}, addAddrs: ${addAddrs})`);
         await state.panel.webview.postMessage({ cmd: 'updateBreakpoints', removeAddrs, addAddrs });
+    } else {
+        console.log('dbgUpdateBreakpoints(): state is null');
     }
 }
 
