@@ -22,7 +22,7 @@ async function setupEmulator(project: Project): Promise<State> {
         'kcide_emu', // type
         project.emulator.system, // title
         {
-            viewColumn: ViewColumn.Two,
+            viewColumn: ViewColumn.Beside,
             preserveFocus: true,
         },
         {
@@ -95,7 +95,7 @@ export async function ensureEmulator(project: Project) {
             discardEmulator();
             state = await setupEmulator(project);
         }
-        state.panel.reveal(ViewColumn.Two, true);
+        state.panel.reveal(ViewColumn.Beside, true);
     }
 }
 
