@@ -32,7 +32,7 @@ interface IAttachRequestArguments extends ILaunchRequestArguments { };
 
 interface ISourceRuntimeBreakpoint {
     id: number,
-    path: string,
+    uri: Uri,
     workspaceRelativePath: string,
     source: Source,
     line: number,
@@ -42,7 +42,7 @@ interface ISourceRuntimeBreakpoint {
 
 interface IInstructionRuntimeBreakpoint {
     id: number,
-    path?: string,
+    uri?: Uri,
     workspaceRelativePath?: string,
     source?: Source,
     line?: number,
@@ -57,6 +57,10 @@ function toUint8String(val: number, noPrefix?: boolean): string {
 function toUint16String(val: number, noPrefix?: boolean): string {
     const str = val.toString(16).padStart(4, '0').toUpperCase();
     return noPrefix ? str: `0x${str}`;
+}
+
+function uriEqual(uri0: Uri, uri1: Uri): boolean {
+    return String(uri0).toLowerCase() === String(uri1).toLowerCase();
 }
 
 export function activate(ext: ExtensionContext) {
@@ -88,7 +92,7 @@ export class KCIDEDebugSession extends DebugSession {
     private static self: KCIDEDebugSession | undefined = undefined;
     private static readonly wasmFsRoot = '/workspace/';
     private static readonly threadId = 1;
-    private nativeFsRoot = '';
+    private nativeFsRoot: Uri;
     private curStackFrameId: number = 1;
     private configurationDone = new Subject();
     private mapSourceToAddr: Record<string, Array<number>> = {};
@@ -101,7 +105,7 @@ export class KCIDEDebugSession extends DebugSession {
     public constructor() {
         super();
         KCIDEDebugSession.self = this;
-        this.nativeFsRoot = requireProjectUri().path + '/';
+        this.nativeFsRoot = requireProjectUri();
         console.log(`debug: nativeFsRoot is ${this.nativeFsRoot}`);
     }
 
@@ -180,19 +184,19 @@ export class KCIDEDebugSession extends DebugSession {
         _request?: DebugProtocol.Request | undefined
     ) {
         console.log(`=> KCIDEDebugSession.setBreakpointsRequest: args.source.path=${args.source.path}`);
-        const path = Uri.file(args.source.path!).path;
-        const clearedBreakpoints = this.clearSourceBreakpointsByPath(path);
+        const uri = Uri.file(args.source.path!);
+        const clearedBreakpoints = this.clearSourceBreakpointsByUri(uri);
         const clientLines = args.breakpoints!.map((bp) => bp.line);
         const debugProtocolBreakpoints = clientLines.map<DebugProtocol.Breakpoint>((l) => {
-            const bp = this.addSourceBreakpoint(path, l);
-            const source = this.sourceFromPath(bp.path);
+            const bp = this.addSourceBreakpoint(uri, l);
+            const source = this.sourceFromUri(bp.uri);
             const protocolBreakpoint = new Breakpoint(bp.verified, bp.line, 0, source) as DebugProtocol.Breakpoint;
             protocolBreakpoint.id = bp.id;
             return bp;
         });
         response.body = { breakpoints: debugProtocolBreakpoints };
         const removeAddrs = clearedBreakpoints.filter((bp) => (bp.addr !== undefined)).map((bp) => bp.addr!);
-        const addAddrs = this.getSourceBreakpointsByPath(path).filter((bp) => (bp.addr !== undefined)).map((bp) => bp.addr!);
+        const addAddrs = this.getSourceBreakpointsByUri(uri).filter((bp) => (bp.addr !== undefined)).map((bp) => bp.addr!);
         await emu.dbgUpdateBreakpoints(removeAddrs, addAddrs);
         this.sendResponse(response);
     }
@@ -206,7 +210,7 @@ export class KCIDEDebugSession extends DebugSession {
         const clearedBreakpoints = this.clearInstructionBreakpoints();
         const debugProtocolBreakpoints = args.breakpoints.map((ibp) => {
             const bp = this.addInstructionBreakpoint(ibp.instructionReference, ibp.offset ?? 0);
-            const source = this.sourceFromPathOptional(bp.path);
+            const source = this.sourceFromUriOptional(bp.uri);
             const protocolBreakpoint = new Breakpoint(true, bp.line, 0, source) as DebugProtocol.Breakpoint;
             protocolBreakpoint.id = bp.id;
             if (bp.addr !== undefined) {
@@ -302,7 +306,7 @@ export class KCIDEDebugSession extends DebugSession {
                     {
                         id: this.curStackFrameId,
                         name: addrStr,
-                        source: this.sourceFromPathOptional(curLocation.path),
+                        source: this.sourceFromUriOptional(curLocation.uri),
                         line: curLocation.line,
                         instructionPointerReference: addrStr,
                         column: 0,
@@ -434,7 +438,7 @@ export class KCIDEDebugSession extends DebugSession {
                 address: toUint16String(line.addr),
                 instructionBytes: line.bytes.map((byte) => toUint8String(byte, true)).join(' '),
                 instruction: line.chars,
-                location: this.sourceFromPathOptional(loc?.path),
+                location: this.sourceFromUriOptional(loc?.uri),
                 line: (loc === undefined) ? undefined : loc.line,
             };
         });
@@ -480,71 +484,71 @@ export class KCIDEDebugSession extends DebugSession {
         });
     }
 
-    private getLocationByAddr(addr: number): { path: string, line: number, addr: number } | undefined {
+    private getLocationByAddr(addr: number): { uri: Uri, line: number, addr: number } | undefined {
         const loc = this.mapAddrToSource[addr];
         if (loc === undefined) {
             return undefined;
         }
         return {
-            path: this.nativeFsRoot + loc.source,
+            uri: Uri.joinPath(this.nativeFsRoot, loc.source),
             line: loc.line,
             addr,
         };
     }
 
-    private getWorkspaceRelativePath(path: string): string {
+    private getWorkspaceRelativePath(uri: Uri): string {
         // Windows is inconsistant with device letter casing
-        console.log(`KCIDEDebugSession.getWorkspaceRelativePath(${path})`);
-        if (path.toLowerCase().startsWith(this.nativeFsRoot.toLowerCase())) {
-            return path.slice(this.nativeFsRoot.length);
+        console.log(`KCIDEDebugSession.getWorkspaceRelativePath(${uri})`);
+        if (String(uri).toLowerCase().startsWith(String(this.nativeFsRoot).toLowerCase())) {
+            return String(uri).slice(String(this.nativeFsRoot).length + 1);
         } else {
             // FIXME: should this be a hard error?
-            console.log(`KCIDEDebugSession.getWorkspaceRelative(): incoming path ${path} doesn't start with ${this.nativeFsRoot}`);
-            return path;
+            console.log(`KCIDEDebugSession.getWorkspaceRelative(): incoming uri ${uri} doesn't start with ${this.nativeFsRoot}`);
+            return String(uri);
         }
     }
 
-    private sourceFromPath(path: string): Source {
-        console.log(`KCIDEDebugSession.sourceFromPath(${path})`);
-        const name = this.getWorkspaceRelativePath(path);
-        return new Source(name, path, 0);
+    private sourceFromUri(uri: Uri): Source {
+        console.log(`KCIDEDebugSession.sourceFromUri(${uri})`);
+        const name = this.getWorkspaceRelativePath(uri);
+        return new Source(name, String(uri), 0);
     }
 
-    private sourceFromPathOptional(path: string | undefined): Source | undefined {
-        if (path === undefined) {
+    private sourceFromUriOptional(uri: Uri | undefined): Source | undefined {
+        if (uri === undefined) {
             return undefined;
         }
-        return this.sourceFromPath(path);
+        return this.sourceFromUri(uri);
     }
 
-    private getCurrentLocation(): { path: string, line: number, addr: number } | undefined {
+    private getCurrentLocation(): { uri: Uri, line: number, addr: number } | undefined {
         if (this.curAddr === undefined) {
             return undefined;
         }
         return this.getLocationByAddr(this.curAddr);
     }
 
-    private clearSourceBreakpointsByPath(path: string): ISourceRuntimeBreakpoint[] {
-        const clearedBreakpoints = this.sourceBreakpoints.filter((bp) => (bp.path === path));
-        this.sourceBreakpoints = this.sourceBreakpoints.filter((bp) => (bp.path !== path));
+    private clearSourceBreakpointsByUri(uri: Uri): ISourceRuntimeBreakpoint[] {
+        const clearedBreakpoints = this.sourceBreakpoints.filter((bp) => uriEqual(bp.uri, uri));
+        this.sourceBreakpoints = this.sourceBreakpoints.filter((bp) => !uriEqual(bp.uri, uri));
         return clearedBreakpoints;
     }
 
-    private getSourceBreakpointsByPath(path: string): ISourceRuntimeBreakpoint[] {
-        return this.sourceBreakpoints.filter((bp) => (bp.path === path));
+    private getSourceBreakpointsByUri(uri: Uri): ISourceRuntimeBreakpoint[] {
+        return this.sourceBreakpoints.filter((bp) => uriEqual(bp.uri, uri));
     }
 
-    private addSourceBreakpoint(path: string, line: number): ISourceRuntimeBreakpoint {
-        const workspaceRelativePath = this.getWorkspaceRelativePath(path);
+    private addSourceBreakpoint(uri: Uri, line: number): ISourceRuntimeBreakpoint {
+        const workspaceRelativePath = this.getWorkspaceRelativePath(uri);
         let addr = undefined;
         if (this.mapSourceToAddr[workspaceRelativePath] !== undefined) {
             addr = this.mapSourceToAddr[workspaceRelativePath][line] ?? undefined;
         }
         const bp: ISourceRuntimeBreakpoint = {
             verified: addr !== undefined,
-            path,
+            uri,
             workspaceRelativePath,
-            source: this.sourceFromPath(path),
+            source: this.sourceFromUri(uri),
             line,
             addr,
             id: this.breakpointId++
@@ -562,17 +566,17 @@ export class KCIDEDebugSession extends DebugSession {
     private addInstructionBreakpoint(instructionReference: string, offset: number): IInstructionRuntimeBreakpoint {
         const addr = parseInt(instructionReference) + offset;
         let workspaceRelativePath;
-        let path;
+        let uri;
         let line;
         if (this.mapAddrToSource[addr]) {
             workspaceRelativePath = this.mapAddrToSource[addr].source;
-            path = this.nativeFsRoot + workspaceRelativePath,
+            uri = Uri.joinPath(this.nativeFsRoot, workspaceRelativePath);
             line = this.mapAddrToSource[addr].line;
         }
         const bp: IInstructionRuntimeBreakpoint = {
-            path,
+            uri,
             workspaceRelativePath,
-            source: this.sourceFromPathOptional(path),
+            source: this.sourceFromUriOptional(uri),
             line,
             addr,
             id: this.breakpointId++,
