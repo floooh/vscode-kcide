@@ -25,7 +25,12 @@ export async function asmBuild(ext: ExtensionContext) {
 export async function asmCheck(ext: ExtensionContext) {
     try {
         const project = await loadProject();
-        const result = await assemble(ext, project, { genListingFile: false, genObjectFile: false, genMapFile: true });
+        const result = await assemble(ext, project, {
+            genListingFile: false,
+            genObjectFile: false,
+            genMapFile: false,
+            saveAll: false,
+        });
         updateDiagnosticsFromStderr(project.uri, result.stderr);
     } catch (err) {
         window.showErrorMessage((err as Error).message);
