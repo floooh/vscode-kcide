@@ -7,6 +7,7 @@ import {
 import { KCIDEDebugSession } from './debug';
 import { System, Project, CPUState, DisasmLine } from './types';
 import { readTextFile, getExtensionUri } from './filesystem';
+import { loadProject } from './project';
 
 interface State {
     panel: WebviewPanel;
@@ -120,7 +121,8 @@ export async function waitReady(timeoutMs: number): Promise<boolean> {
     return false;
 }
 
-export async function init(project: Project) {
+export async function init() {
+    const project = await loadProject();
     await ensureEmulator(project);
 }
 

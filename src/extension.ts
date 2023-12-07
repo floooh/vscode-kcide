@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import * as commands from './commands';
-import { loadProject } from './project';
 import * as debug from './debug';
 import * as emu from './emu';
 
@@ -38,12 +37,10 @@ export async function activate(ext: vscode.ExtensionContext) {
 
         // keep this at the end since it may throw when no folder is opened, but this lets the
         // actual extension initialize properly
-        const project = await loadProject();
-        await emu.init(project);
+        await emu.init();
     } catch (err) {
         vscode.window.showErrorMessage((err as Error).message);
     }
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {}
