@@ -3,7 +3,7 @@
   "private": "true",
   "displayName": "Experimental - KC IDE",
   "description": "Assembly IDE for KC85 computers",
-  "version": "0.18.0",
+  "version": "0.18.1",
   "author": "Andre Weissflog",
   "publisher": "floooh",
   "repository": {
