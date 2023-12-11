@@ -85,7 +85,6 @@ debugging UI has a much more powerful memory viewer and editor
 
 - test building by pressing **F7** or running the palette command `KCIDE: Build`
 - test debugging by pressing **F5** or running the palette command `KCIDE: Debug`
--
 
 ## The integrated debugging UI
 
@@ -103,3 +102,14 @@ The emulator comes with an integrated debugging UI implemented with [Dear ImGui]
 - an execution history window
 - status windows for the Z80 CPU, PIO and CTC
 - ...and more
+
+## Running in VSCode for Web
+
+The extension has 'best effort' support for running in the VSCode browser version with the
+following known issues:
+
+- currently only the Insider version is supported (https://insiders.vscode.dev/)
+- currently only working on local repositories is supported, directly opening
+Github respositories doesn't work
+- starting a debug session for the first time seems to take considerably longer
+than on the desktop VSCode version
