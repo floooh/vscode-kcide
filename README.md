@@ -42,7 +42,7 @@ With the **pre-release version** of the extension installed:
 that's not part of the project (such as operating system code)
 - you can inspect memory by hovering over a CPU register in the VSCode `Variables` panel and clicking
 the 'binary' icon with the tooltip `View Binary Data`, however note that the emulator's integrated
-debugging UI has a much more powerful memory viewer and editor
+debugging UI has a much more powerful memory viewer and editor than what VSCode can provide through the Debug Adapter Protocol
 
 ## Starting a new project
 
