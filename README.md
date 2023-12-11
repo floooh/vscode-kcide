@@ -1,5 +1,3 @@
-# A KC85 Assembly IDE for VSCode
-
 An assembler IDE for KC85/3 and KC85/4 computers...
 
 ![screenshot-1](/screenshots/vscode-kcide-1.webp)
