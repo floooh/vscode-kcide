@@ -38,13 +38,6 @@ With the **pre-release version** of the extension installed:
 - the assembler is a slightly extended [ASMX](http://svn.xi6.com/svn/asmx/branches/2.x/asmx-doc.html) compiled to WASI, the changes are tracked [here](https://github.com/floooh/easmx)
 - the KC85/3 and /4 emulators are taken from the [chips project](https://floooh.github.io/tiny8bit/) compiled to WASM+WebGL, running in a VSCode tab
 - syntax highlighting is provided by https://github.com/mborik/z80-macroasm-vscode/blob/main/syntaxes/z80-macroasm.tmLanguage.json
-- the debug adapter supports the `Disassembly` feature which lets
-you step into disassembled code that's not part of the project
-(for instance operating system code)
-- the debug adapter also supports the `Read Memory` feature which
-allows to inspect emulator memory in a VSCode panel, however this
-feature isn't as powerful as the Dear ImGui memory editor that's
-integrated into the emulator
 - during a debug session, you can change into the 'raw' disassembly view at any time by running the palette command `Open Disassembly View`, this also happens automatically when stepping into code
 that's not part of the project (such as operating system code)
 - you can inspect memory by hovering over a CPU register in the VSCode `Variables` panel and clicking
