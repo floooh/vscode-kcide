@@ -5,6 +5,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+## [1.1.2] - 2023-12-12
+
 ### Changed
 - Fix changelog update happening before publishing
 
