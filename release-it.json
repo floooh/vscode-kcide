@@ -1,0 +1,19 @@
+{
+    "plugins": {
+        "@release-it/keep-a-changelog": {
+            "filename": "CHANGELOG.md",
+            "addUnreleased": true,
+            "strictLatest": false
+        }
+    },
+    "hooks": {
+        "before:init": [ "npm run lint" ],
+        "after:bump": "npm run publish:pre-release"
+    },
+    "git": {
+        "commitMessage": "release v${version}"
+    },
+    "npm": {
+        "publish": false
+    }
+}

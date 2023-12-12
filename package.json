@@ -201,14 +201,16 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run clean && npm run compile",
+    "vscode:prepublish": "npm run clean && npm run lint && npm run compile",
     "clean": "rimraf out dist",
     "compile": "webpack --mode production",
     "compile-dev": "webpack --mode development",
     "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts && tsc --noEmit"
+    "lint": "eslint src --ext ts && tsc --noEmit",
+    "publish:pre-release": "vsce publish --pre-release"
   },
   "devDependencies": {
+    "@release-it/keep-a-changelog": "^5.0.0",
     "@types/mocha": "^10.0.3",
     "@types/node": "18.x",
     "@types/vscode": "^1.84.0",
@@ -218,6 +220,7 @@
     "eslint": "^8.52.0",
     "glob": "^10.3.10",
     "mocha": "^10.2.0",
+    "release-it": "^17.0.1",
     "rimraf": "^5.0.5",
     "ts-loader": "^9.5.1",
     "typescript": "^5.2.2",
