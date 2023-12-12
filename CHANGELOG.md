@@ -5,6 +5,9 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Changed
+- More release process fixes.
+
 ## [1.1.2] - 2023-12-12
 
 ### Changed
