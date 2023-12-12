@@ -207,7 +207,8 @@
     "compile-dev": "webpack --mode development",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts && tsc --noEmit",
-    "publish:pre-release": "vsce publish --pre-release"
+    "publish:pre-release": "vsce publish --pre-release",
+    "release": "release-it"
   },
   "devDependencies": {
     "@release-it/keep-a-changelog": "^5.0.0",
