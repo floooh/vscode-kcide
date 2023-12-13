@@ -5,6 +5,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Added
+
+- The KC emulator now has a 'stopwatch' window for performance profiling (under the menu item `Debug => Stopwatch`)
+
 ## [1.1.3] - 2023-12-12
 
 ### Changed
