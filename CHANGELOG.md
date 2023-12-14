@@ -5,6 +5,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Added
+
+- The KC85/4 emulator can now access the video RAM banks in the memory editor windows.
+
 ## [1.2.0] - 2023-12-13
 
 ### Added
