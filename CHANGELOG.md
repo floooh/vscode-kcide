@@ -5,6 +5,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Changed
+
+- An active debug session is now automatically terminated on emulator reset or reboot.
+
 ## [1.3.0] - 2023-12-14
 
 ### Added
