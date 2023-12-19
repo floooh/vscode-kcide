@@ -5,6 +5,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+## [1.5.0] - 2023-12-19
+
 ### Changed
 
 - Update emulators with improved emulation of the CTC CLKTRG0..3 input pins.
