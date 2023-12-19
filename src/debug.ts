@@ -112,7 +112,7 @@ export class KCIDEDebugSession extends DebugSession {
     public static onEmulatorMessage(msg: any) {
         console.log(`KCIDEDebugSession.onEmulatorMessage: ${JSON.stringify(msg)}`);
         if (KCIDEDebugSession.self === undefined) {
-            console.log('KCIDEDebugRuntime.onEmulatorMessage: self is undefined');
+            console.log('KCIDEDebugRuntime.onEmulatorMessage: self is undefined (not an error)');
             return;
         }
         // see media/shell.js/init()
@@ -123,6 +123,13 @@ export class KCIDEDebugSession extends DebugSession {
             case 'emu_continued':
                 KCIDEDebugSession.self.onEmulatorContinued();
                 break;
+            case 'emu_reboot':
+                KCIDEDebugSession.self.onEmulatorReboot();
+                break;
+            case 'emu_reset':
+                KCIDEDebugSession.self.onEmulatorReset();
+                break;
+
         }
     }
 
@@ -608,6 +615,14 @@ export class KCIDEDebugSession extends DebugSession {
 
     private onEmulatorContinued() {
         this.sendEvent(new ContinuedEvent(KCIDEDebugSession.threadId));
+    }
+
+    private onEmulatorReboot() {
+        this.sendEvent(new TerminatedEvent());
+    }
+
+    private onEmulatorReset() {
+        this.sendEvent(new TerminatedEvent());
     }
 
     // this is a bit of a hack to automatically open the disassembly view when the debugger

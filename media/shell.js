@@ -51,6 +51,12 @@ function kcide_init() {
     Module.webapi_onContinued = () => {
         Module.vsCodeApi.postMessage({ command: 'emu_continued' });
     };
+    Module.webapi_onReboot = () => {
+        Module.vsCodeApi.postMessage({ command: 'emu_reboot' });
+    };
+    Module.webapi_onReset = () => {
+        Module.vsCodeApi.postMessage({ command: 'emu_reset' });
+    };
     Module._webapi_dbg_connect();
 };
 
