@@ -1,5 +1,5 @@
-import { workspace, extensions, ExtensionContext, Uri, FileType } from 'vscode';
-import { Project } from './types';
+import { workspace, extensions, ExtensionContext, Uri, FileType as VSCodeFileType} from 'vscode';
+import { Project, FileType } from './types';
 import { requireWasiEnv } from './wasi';
 
 const decoder = new TextDecoder('utf-8');
@@ -15,7 +15,7 @@ export async function uriToWasmPath(ext: ExtensionContext, uri: Uri): Promise<st
 
 export async function fileExists(uri: Uri): Promise<boolean> {
     try {
-        return (await workspace.fs.stat(uri)).type === FileType.File;
+        return (await workspace.fs.stat(uri)).type === VSCodeFileType.File;
     } catch (err) {
         return false;
     }
@@ -23,7 +23,7 @@ export async function fileExists(uri: Uri): Promise<boolean> {
 
 export async function dirExists(uri: Uri): Promise<boolean> {
     try {
-        return (await workspace.fs.stat(uri)).type === FileType.Directory;
+        return (await workspace.fs.stat(uri)).type === VSCodeFileType.Directory;
     } catch (err) {
         return false;
     }
@@ -84,7 +84,8 @@ export function getOutputMapFileUri(project: Project): Uri {
 }
 
 export function getOutputBinFileUri(project: Project): Uri {
-    return getOutputFileUri(project, `${project.assembler.outBaseFilename}.kcc`);
+    const ext = (project.assembler.outFiletype === FileType.KCC) ? 'kcc' : 'prg';
+    return getOutputFileUri(project, `${project.assembler.outBaseFilename}.${ext}`);
 }
 
 export function getExtensionUri(): Uri {

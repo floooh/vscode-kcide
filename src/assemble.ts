@@ -118,7 +118,7 @@ export async function writeOutputFile(project: Project, hexUri: Uri, withAutoSta
     if (project.assembler.outFiletype === FileType.KCC) {
         data = hexToKCC(hexData, withAutoStart);
     } else if (project.assembler.outFiletype === FileType.PRG) {
-        data = hexToPRG(hexData, withAutoStart);
+        data = hexToPRG(hexData);
     } else {
         throw new Error('Unknown output filetype');
     }

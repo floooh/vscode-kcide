@@ -1,12 +1,8 @@
 // see: https://en.wikipedia.org/wiki/Intel_HEX
 
-// FIXME: add this stuff right into asmx?
-export function hexToKCC(hex: string, withExecAddr: boolean) {
+function findMinMaxAddr(lines: string[]): { minAddr: number, maxAddr: number } {
     let minAddr = 0xFFFF;
     let maxAddr = 0;
-
-    // first scan to find min/max address
-    const lines = hex.split('\n');
     lines.forEach((line) => {
         if (line.startsWith(':')) {
             const numBytes = parseInt(line.slice(1, 3), 16);
@@ -19,7 +15,31 @@ export function hexToKCC(hex: string, withExecAddr: boolean) {
             }
         }
     });
-    // FIXME?
+    return { minAddr, maxAddr };
+}
+
+function appendHexData(arr: Uint8Array, minAddr: number, headerSize: number, lines: string[]) {
+    lines.forEach((line) => {
+        if (line.startsWith(':')) {
+            const numBytes = parseInt(line.slice(1, 3), 16);
+            const index = (parseInt(line.slice(3, 7), 16) - minAddr) + headerSize;
+            const type = parseInt(line.slice(7, 9), 16);
+            if (type !== 0) {
+                throw new Error(`Invalid ihex record type encountered: ${type}`);
+            }
+            for (let i = 0; i < numBytes; i++) {
+                const si = 9 + 2*i;
+                const byte = parseInt(line.slice(si, si+2), 16);
+                arr[index + i] = byte;
+            }
+        }
+    });
+}
+
+// FIXME: add this stuff right into asmx?
+export function hexToKCC(hex: string, withExecAddr: boolean) {
+    const lines = hex.split('\n');
+    const { minAddr, maxAddr } = findMinMaxAddr(lines);
     const execAddr = minAddr;
 
     // generate KCC header
@@ -27,7 +47,7 @@ export function hexToKCC(hex: string, withExecAddr: boolean) {
     const numBytes = kccHeaderSize + (maxAddr - minAddr);
     const kcc = new Uint8Array(numBytes);
     // bytes 0..15: name
-    [...'FIXME'].forEach((c, i) => {
+    [...'KCIDE'].forEach((c, i) => {
         kcc[i] = c.charCodeAt(0);
     });
     // byte 16: num_addr
@@ -43,25 +63,19 @@ export function hexToKCC(hex: string, withExecAddr: boolean) {
     kcc[22] = (execAddr & 0xFF00) >> 8;
 
     // fill rest with data
-    lines.forEach((line) => {
-        if (line.startsWith(':')) {
-            const numBytes = parseInt(line.slice(1, 3), 16);
-            const index = (parseInt(line.slice(3, 7), 16) - minAddr) + kccHeaderSize;
-            const type = parseInt(line.slice(7, 9), 16);
-            if (type !== 0) {
-                throw new Error(`Invalid ihex record type encountered: ${type}`);
-            }
-            for (let i = 0; i < numBytes; i++) {
-                const si = 9 + 2*i;
-                const byte = parseInt(line.slice(si, si+2), 16);
-                kcc[index + i] = byte;
-            }
-        }
-    });
+    appendHexData(kcc, minAddr, kccHeaderSize, lines);
     return kcc;
 }
 
-export function hexToPRG(_hex: string, _withExecAddr: boolean) {
-    // FIXME
-    return new Uint8Array(16);
+export function hexToPRG(hex: string) {
+    const lines = hex.split('\n');
+    const { minAddr, maxAddr } = findMinMaxAddr(lines);
+    const prgHeaderSize = 2;
+    const numBytes = prgHeaderSize + (maxAddr - minAddr);
+    const prg = new Uint8Array(numBytes);
+    // 2 byte header is start address in little endian
+    prg[0] = minAddr & 0xFF;
+    prg[1] = (minAddr & 0xFF00) >> 8;
+    appendHexData(prg, minAddr, prgHeaderSize, lines);
+    return prg;
 }
