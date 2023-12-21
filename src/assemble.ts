@@ -3,7 +3,7 @@ import {
     ExtensionContext,
     Uri,
 } from 'vscode';
-import { Project } from './types';
+import { Project, FileType } from './types';
 import {
     uriToWasmPath,
     dirExists,
@@ -14,12 +14,12 @@ import {
     getOutputListFileUri,
     getOutputMapFileUri,
     getOutputObjectFileUri,
-    getOutputKccFileUri,
+    getOutputBinFileUri,
     writeBinaryFile,
     readTextFile
 } from './filesystem';
 import { requireWasiEnv } from './wasi';
-import { hexToKcc } from './filetypes';
+import { hexToKCC, hexToPRG } from './filetypes';
 
 export interface RunAsmxResult {
     exitCode: number,
@@ -114,8 +114,15 @@ export async function assemble(ext: ExtensionContext, project: Project, options:
 
 export async function writeOutputFile(project: Project, hexUri: Uri, withAutoStart: boolean) {
     const hexData = await readTextFile(hexUri);
-    const kcc = hexToKcc(hexData, withAutoStart);
-    const uri = getOutputKccFileUri(project);
-    await writeBinaryFile(uri, kcc);
+    let data;
+    if (project.assembler.outFiletype === FileType.KCC) {
+        data = hexToKCC(hexData, withAutoStart);
+    } else if (project.assembler.outFiletype === FileType.PRG) {
+        data = hexToPRG(hexData, withAutoStart);
+    } else {
+        throw new Error('Unknown output filetype');
+    }
+    const uri = getOutputBinFileUri(project);
+    await writeBinaryFile(uri, data);
     return uri;
 }

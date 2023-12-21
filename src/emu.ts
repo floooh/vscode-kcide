@@ -5,7 +5,7 @@ import {
     Uri,
 } from 'vscode';
 import { KCIDEDebugSession } from './debug';
-import { System, Project, CPUState, DisasmLine } from './types';
+import { System, Project, CPUState, DisasmLine, FileType } from './types';
 import { readTextFile, getExtensionUri } from './filesystem';
 import { loadProject } from './project';
 
@@ -33,7 +33,11 @@ async function setupEmulator(project: Project): Promise<State> {
             localResourceRoots: [ rootUri ],
         }
     );
-    panel.iconPath = Uri.joinPath(rootUri, 'logo-small.png');
+    if (project.emulator.system === System.C64) {
+        panel.iconPath = Uri.joinPath(rootUri, 'c64-logo-small.png');
+    } else {
+        panel.iconPath = Uri.joinPath(rootUri, 'kc85-logo-small.png');
+    }
     panel.onDidDispose(() => {
         state = null;
     });
@@ -56,6 +60,7 @@ async function setupEmulator(project: Project): Promise<State> {
     let emuFilename;
     switch (project.emulator.system) {
         case System.KC853: emuFilename = 'kc853-ui.js'; break;
+        case System.C64:   emuFilename = 'c64-ui.js'; break;
         default:           emuFilename = 'kc854-ui.js'; break;
     }
     const emuUri = panel.webview.asWebviewUri(Uri.joinPath(rootUri, emuFilename));
@@ -130,10 +135,10 @@ function toBase64(data: Uint8Array): string {
     return btoa(String.fromCodePoint(...data));
 }
 
-export async function loadKcc(kcc: Uint8Array, start: boolean, stopOnEntry: boolean) {
+export async function load(data: Uint8Array, start: boolean, stopOnEntry: boolean) {
     if (state) {
-        const dataBase64 = toBase64(kcc);
-        await state.panel.webview.postMessage({ cmd: 'loadkcc', kcc: dataBase64, start, stopOnEntry});
+        const dataBase64 = toBase64(data);
+        await state.panel.webview.postMessage({ cmd: 'load', data: dataBase64, start, stopOnEntry});
     }
 }
 

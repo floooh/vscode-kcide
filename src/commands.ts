@@ -43,10 +43,10 @@ export async function asmRun(ext: ExtensionContext) {
         const result = await assemble(ext, project, { genListingFile: true, genObjectFile: true, genMapFile: true });
         const diagnostics = updateDiagnosticsFromStderr(project.uri, result.stderr);
         if (diagnostics.numErrors === 0) {
-            const kccUri = await writeOutputFile(project, result.objectUri!, true);
+            const binUri = await writeOutputFile(project, result.objectUri!, true);
             // start directly without debug session
-            const kcc = await readBinaryFile(kccUri);
-            await emu.loadKcc(kcc, true, false);
+            const bin = await readBinaryFile(binUri);
+            await emu.load(bin, true, false);
         } else {
             window.showErrorMessage('Assembler returned with errors');
         }

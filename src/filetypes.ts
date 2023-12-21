@@ -1,7 +1,7 @@
 // see: https://en.wikipedia.org/wiki/Intel_HEX
 
 // FIXME: add this stuff right into asmx?
-export function hexToKcc(hex: string, withExecAddr: boolean) {
+export function hexToKCC(hex: string, withExecAddr: boolean) {
     let minAddr = 0xFFFF;
     let maxAddr = 0;
 
@@ -21,7 +21,7 @@ export function hexToKcc(hex: string, withExecAddr: boolean) {
     });
     // FIXME?
     const execAddr = minAddr;
-    
+
     // generate KCC header
     const kccHeaderSize = 128;
     const numBytes = kccHeaderSize + (maxAddr - minAddr);
@@ -59,4 +59,9 @@ export function hexToKcc(hex: string, withExecAddr: boolean) {
         }
     });
     return kcc;
-}    
+}
+
+export function hexToPRG(_hex: string, _withExecAddr: boolean) {
+    // FIXME
+    return new Uint8Array(16);
+}

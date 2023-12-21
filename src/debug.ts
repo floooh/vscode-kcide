@@ -20,7 +20,7 @@ import * as vscode from 'vscode';
 // @ts-ignore
 import { Subject } from 'await-notify';
 import { CPU } from './types';
-import { readBinaryFile, readTextFile, getOutputMapFileUri, getOutputKccFileUri } from './filesystem';
+import { readBinaryFile, readTextFile, getOutputMapFileUri, getOutputBinFileUri } from './filesystem';
 import { loadProject, requireProjectUri } from './project';
 import * as emu from './emu';
 
@@ -164,7 +164,7 @@ export class KCIDEDebugSession extends DebugSession {
         console.log('=> KCIDEDebugSession.launchRequest');
         try {
             const project = await loadProject();
-            const kccUri = getOutputKccFileUri(project);
+            const binUri = getOutputBinFileUri(project);
             const mapUri = getOutputMapFileUri(project);
             await this.loadMapFile(mapUri);
             await emu.ensureEmulator(project);
@@ -174,8 +174,8 @@ export class KCIDEDebugSession extends DebugSession {
             this.sendEvent(new InitializedEvent());
             // wait until breakpoints are configured
             await this.configurationDone.wait();
-            const kcc = await readBinaryFile(kccUri);
-            await emu.loadKcc(kcc, true, args.stopOnEntry);
+            const binData = await readBinaryFile(binUri);
+            await emu.load(binData, true, args.stopOnEntry);
         } catch (err) {
             const msg = `Failed to launch debug session (${err})`;
             vscode.window.showErrorMessage(msg);
@@ -373,7 +373,6 @@ export class KCIDEDebugSession extends DebugSession {
                     (f & (1<<0)) ? 'C' : '-',
                 ].join('');
             };
-            /*
             const m6502Flags = (f: number): string => {
                 return [
                     (f & (1<<7)) ? 'N' : '-',
@@ -386,17 +385,15 @@ export class KCIDEDebugSession extends DebugSession {
                     (f & (1<<0)) ? 'C' : '-',
                 ].join('');
             };
-            */
-            // FIXME: Z80 vs 6502
             return {
                 name,
-                value: z80Flags(f),
+                value: (cpuState.type === CPU.Z80) ? z80Flags(f) : m6502Flags(f),
                 variablesReference: 0,
             };
         };
-        if (cpuState.type === CPU.Z80) {
+        try {
             // try/catch just in case cpuState isn't actually a proper CPUState object
-            try {
+            if (cpuState.type === CPU.Z80) {
                 response.body = {
                     variables: [
                         toCpuFlags('Flags', cpuState.z80.af),
@@ -419,10 +416,22 @@ export class KCIDEDebugSession extends DebugSession {
                         toBoolVar('IFF2', cpuState.z80.iff & 2)
                     ]
                 };
-            } catch (err) {
+            } else if (cpuState.type === CPU.M6502) {
+                response.body = {
+                    variables: [
+                        toCpuFlags('Flags', cpuState.m6502.p),
+                        toUint8Var('A', cpuState.m6502.a),
+                        toUint8Var('X', cpuState.m6502.x),
+                        toUint8Var('Y', cpuState.m6502.y),
+                        toUint8Var('S', cpuState.m6502.s),
+                        toUint8Var('P', cpuState.m6502.p),
+                        toUint16Var('PC', cpuState.m6502.pc),
+                    ]
+                };
+            } else {
                 response.body = { variables: [] };
             }
-        } else {
+        } catch (err) {
             response.body = { variables: [] };
         }
         this.sendResponse(response);

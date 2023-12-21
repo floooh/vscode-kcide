@@ -83,7 +83,7 @@ export function getOutputMapFileUri(project: Project): Uri {
     return getOutputFileUri(project, `${project.assembler.outBaseFilename}.map`);
 }
 
-export function getOutputKccFileUri(project: Project): Uri {
+export function getOutputBinFileUri(project: Project): Uri {
     return getOutputFileUri(project, `${project.assembler.outBaseFilename}.kcc`);
 }
 

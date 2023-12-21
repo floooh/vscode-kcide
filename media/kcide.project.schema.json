@@ -13,7 +13,7 @@
                     "description": "Target computer system",
                     "type": "string",
                     "default": "KC85/4",
-                    "enum": [ "KC85/3", "KC85/4" ]
+                    "enum": [ "KC85/3", "KC85/4", "C64" ]
                 }
             },
             "additionalProperties": false,
@@ -55,7 +55,7 @@
                     "description": "Output filetype",
                     "type": "string",
                     "default": "KCC",
-                    "enum": [ "KCC" ]
+                    "enum": [ "KCC", "PRG" ]
                 }
             },
             "additionalProperties": false,

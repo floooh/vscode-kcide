@@ -30,7 +30,7 @@ function kcide_init() {
             case 'boot': kcide_boot(); break;
             case 'reset': kcide_reset(); break;
             case 'ready': kcide_ready(); break;
-            case 'loadkcc': kcide_loadkcc(msg.kcc, msg.start, msg.stopOnEntry); break;
+            case 'load': kcide_load(msg.data, msg.start, msg.stopOnEntry); break;
             case 'connect': kcide_dbgConnect(); break;
             case 'disconnect': kcide_dbgDisconnect(); break;
             case 'updateBreakpoints': kcide_dbgUpdateBreakpoints(msg.removeAddrs, msg.addAddrs); break;
@@ -86,17 +86,17 @@ function kcide_ready() {
  * @param {boolean} start
  * @param {boolean} stopOnEntry
  */
-function kcide_loadkcc(dataBase64, start, stopOnEntry) {
+function kcide_load(dataBase64, start, stopOnEntry) {
     // NOTE: transfering ArrayBuffer objects is broken when running as web extension,
     // thus any binary data needs to be transferred as base64 encoded string
     const binStr = atob(dataBase64);
-    const kcc = new Uint8Array(binStr.length);
+    const bin = new Uint8Array(binStr.length);
     for (let i = 0; i < binStr.length; i++) {
-        kcc[i] = binStr.charCodeAt(i);
+        bin[i] = binStr.charCodeAt(i);
     }
-    const size = kcc.length;
+    const size = bin.length;
     const ptr = Module._webapi_alloc(size);
-    Module.HEAPU8.set(kcc, ptr);
+    Module.HEAPU8.set(bin, ptr);
     Module._webapi_quickload(ptr, size, start ? 1:0, stopOnEntry ? 1:0);
     Module._webapi_free(ptr);
 }
@@ -130,7 +130,8 @@ function kcide_dbgCpuState() {
     // see chips-test webapi.h/webapi_cpu_state_t
     const u16idx = Module._webapi_dbg_cpu_state()>>1;
     let state = { type: 'unknown' };
-    if (Module.HEAPU16[u16idx + 0] === 1) {
+    const cpuType = Module.HEAPU16[u16idx + 0];
+    if (cpuType === 1) {
         // must match types.ts/CPUState
         state = {
             type: 'Z80',
@@ -150,6 +151,18 @@ function kcide_dbgCpuState() {
                 im:  Module.HEAPU16[u16idx + 13],
                 ir:  Module.HEAPU16[u16idx + 14],
                 iff: Module.HEAPU16[u16idx + 15],
+            }
+        };
+    } else if (cpuType === 2) {
+        state = {
+            type: '6502',
+            m6502: {
+                a: Module.HEAPU16[u16idx + 1],
+                x: Module.HEAPU16[u16idx + 2],
+                y: Module.HEAPU16[u16idx + 3],
+                s: Module.HEAPU16[u16idx + 4],
+                p: Module.HEAPU16[u16idx + 5],
+                pc: Module.HEAPU16[u16idx + 6],
             }
         };
     }
