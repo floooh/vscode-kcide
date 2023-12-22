@@ -1,4 +1,4 @@
-import { Uri } from 'vscode';
+import { Uri, Diagnostic } from 'vscode';
 import { RootFileSystem, Wasm } from '@vscode/wasm-wasi';
 
 export type WasiEnv = {
@@ -65,6 +65,16 @@ export type DisasmLine = {
 export type SourceMap = {
     sourceToAddr: Record<string, Array<number>>,
     addrToSource: Array<{ source: string, line: number}>;
+};
+
+export type SymbolMap = Record<string, number>;
+
+export type DiagnosticsTuple = [Uri, readonly Diagnostic[] | undefined];
+export type DiagnosticsArray = ReadonlyArray<DiagnosticsTuple>;
+export type DiagnosticsInfo = {
+    diagnostics: DiagnosticsArray;
+    numErrors: number,
+    numWarnings: number,
 };
 
 export function isValidString(val: unknown): val is string {

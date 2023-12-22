@@ -3,7 +3,7 @@ import {
     ExtensionContext,
     Uri,
 } from 'vscode';
-import { Project, FileType, SourceMap } from './types';
+import { Project, FileType, SourceMap, SymbolMap, DiagnosticsInfo } from './types';
 import {
     uriToWasmPath,
     dirExists,
@@ -20,11 +20,12 @@ import {
 } from './filesystem';
 import { requireWasiEnv } from './wasi';
 import { hexToKCC, hexToPRG } from './filetypes';
+import { updateDiagnostics } from './diagnostics';
 
 export interface RunAsmxResult {
     exitCode: number,
-    stdout?: string,
-    stderr?: string,
+    stdout: string,
+    stderr: string,
 };
 
 export async function runAsmx(ext: ExtensionContext, args: string[]): Promise<RunAsmxResult> {
@@ -63,6 +64,7 @@ type AssembleResult = {
     stdout: string,
     stderr: string,
     exitCode: number,
+    diagnostics: DiagnosticsInfo,
 };
 
 export async function assemble(ext: ExtensionContext, project: Project, options: AssembleOptions): Promise<AssembleResult> {
@@ -103,12 +105,15 @@ export async function assemble(ext: ExtensionContext, project: Project, options:
     const mapArgs = genMapFile ? [ '-m', wasmMapPath ] : [];
     const objArgs = genObjectFile ? [ '-o', wasmObjPath ] : [];
     const result = await runAsmx(ext, [ ...lstArgs, ...mapArgs, ...objArgs, ...stdArgs ]);
+    const symbolMap = await loadSymbolMap(project);
+    let diagnostics = updateDiagnostics(project, result.stderr, symbolMap);
     return {
         listingUri: genListingFile ? lstUri: undefined,
         objectUri: genObjectFile ? objUri : undefined,
-        stdout: result.stdout ?? '',
-        stderr: result.stderr ?? '',
+        stdout: result.stdout,
+        stderr: result.stderr,
         exitCode: result.exitCode,
+        diagnostics,
     };
 }
 
@@ -133,8 +138,8 @@ export async function loadSourceMap(project: Project, fsRootLength: number): Pro
         addrToSource: [],
     };
     const uri = getOutputMapFileUri(project);
-    const lines = await readTextFile(uri);
-    lines.split('\n').forEach((line) => {
+    const content = await readTextFile(uri);
+    content.split('\n').forEach((line) => {
         const parts = line.trim().split(':');
         if (parts.length !== 3) {
             return;
@@ -151,5 +156,35 @@ export async function loadSourceMap(project: Project, fsRootLength: number): Pro
         }
         map.addrToSource[addr] = { source: pathStr, line: lineNr };
     });
+    return map;
+}
+
+export async function loadSymbolMap(project: Project): Promise<SymbolMap> {
+    const uri = getOutputListFileUri(project);
+    const content = await readTextFile(uri);
+    const lines = content.split('\n');
+    const map: SymbolMap = {};
+    // only parse the symbol block at the end of file
+    for (let i = lines.length - 2; i >= 0; i--) {
+        const line = lines[i];
+        if (line === '') {
+            break;
+        }
+        const tokens = line.split(' ').filter((item) => (item !== '') && (item !== 'E'));
+        let curSymbol: string | undefined;
+        let curAddr: number | undefined;
+        tokens.forEach((token) => {
+            if (curSymbol === undefined) {
+                curSymbol = token.toLowerCase();
+            } else if (curAddr === undefined) {
+                curAddr = parseInt(token, 16);
+            }
+            if (curSymbol && curAddr) {
+                map[curSymbol] = curAddr;
+                curSymbol = undefined;
+                curAddr = undefined;
+            }
+        });
+    }
     return map;
 }

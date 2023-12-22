@@ -174,7 +174,7 @@ export class KCIDEDebugSession extends DebugSession {
             // wait until breakpoints are configured
             await this.configurationDone.wait();
             const binData = await readBinaryFile(binUri);
-            await emu.load(binData, true, args.stopOnEntry);
+            await emu.load(project, binData, true, args.stopOnEntry);
         } catch (err) {
             const msg = `Failed to launch debug session (${err})`;
             vscode.window.showErrorMessage(msg);

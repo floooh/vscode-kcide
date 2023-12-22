@@ -6,42 +6,41 @@ import {
     DiagnosticCollection,
     DiagnosticSeverity,
 } from 'vscode';
+import { Project, DiagnosticsInfo, DiagnosticsArray, SymbolMap } from './types';
 
 let diagnosticCollection: DiagnosticCollection | null = null;
 
-type DiagnosticsTuple = [Uri, readonly Diagnostic[] | undefined];
-type DiagnosticsArray = ReadonlyArray<DiagnosticsTuple>;
-
-export type DiagnosticsInfo = {
-    diagnostics: DiagnosticsArray;
-    numErrors: number,
-    numWarnings: number,
-};
-
-export function requireDiagnosticCollection(): DiagnosticCollection {
+function requireDiagnosticCollection(): DiagnosticCollection {
     if (diagnosticCollection === null) {
         diagnosticCollection = languages.createDiagnosticCollection('kcide');
     }
     return diagnosticCollection;
 }
 
-export function clearDiagnostics() {
+function clearDiagnostics() {
     const diagnostics = requireDiagnosticCollection();
     diagnostics.clear();
 }
 
-export function updateDiagnosticsFromStderr(projectUri: Uri, stderr: string | undefined): DiagnosticsInfo {
+export function updateDiagnostics(project: Project, stderr: string, symbolMap: SymbolMap): DiagnosticsInfo {
     clearDiagnostics();
     const diagnostics = requireDiagnosticCollection();
-    const parseResult = parseDiagnostics(projectUri, stderr);
-    diagnostics.set(parseResult.diagnostics);
-    return parseResult;
+    const diagnosticsInfo = parseDiagnostics(project.uri, stderr);
+    if (symbolMap['_start'] === undefined) {
+        diagnosticsInfo.numErrors += 1;
+        diagnosticsInfo.diagnostics = [
+            ...diagnosticsInfo.diagnostics,
+            [
+                Uri.joinPath(project.uri, project.assembler.srcDir, project.assembler.mainSourceFile),
+                [new Diagnostic(new Range(0, 0, 0, 255), 'Project is missing a \'_start\' label', DiagnosticSeverity.Error)],
+            ]
+        ];
+    }
+    diagnostics.set(diagnosticsInfo.diagnostics);
+    return diagnosticsInfo;
 }
 
-function parseDiagnostics(projectUri: Uri, stderr: string | undefined): DiagnosticsInfo {
-    if (stderr === undefined) {
-        return { diagnostics: [], numErrors: 0, numWarnings: 0 };
-    }
+function parseDiagnostics(projectUri: Uri, stderr: string): DiagnosticsInfo {
     const pathPrefix = projectUri.path;
     let numErrors = 0;
     let numWarnings = 0;

@@ -5,6 +5,31 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Changed
+
+- Breaking change: projects must now have a special `_start` label which defined the entry point of the program
+  (previously the first instruction of the main source was the entry point).
+
+### Added
+
+- Initial C64 support. To setup a C64 project, use a `kcide.project.json` file like this:
+
+    ```json
+    {
+        "emulator": {
+            "system": "C64"
+        },
+        "assembler": {
+            "cpu": "6502",
+            "srcDir": "src",
+            "mainSourceFile": "main.asm",
+            "outDir": "build",
+            "outBaseFilename": "out",
+            "outFiletype": "PRG"
+        }
+    }
+    ```
+
 ## [1.5.0] - 2023-12-19
 
 ### Changed
