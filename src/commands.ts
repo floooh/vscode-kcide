@@ -1,5 +1,5 @@
 import { ExtensionContext, window } from 'vscode';
-import { assemble, writeOutputFile } from './assemble';
+import { assemble, writeOutputFile } from './assembler';
 import { loadProject } from './project';
 import { updateDiagnosticsFromStderr } from './diagnostics';
 import * as emu from './emu';

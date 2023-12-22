@@ -19,9 +19,10 @@ import { DebugProtocol } from '@vscode/debugprotocol';
 import * as vscode from 'vscode';
 // @ts-ignore
 import { Subject } from 'await-notify';
-import { CPU } from './types';
+import { CPU, SourceMap } from './types';
 import { readBinaryFile, readTextFile, getOutputMapFileUri, getOutputBinFileUri } from './filesystem';
 import { loadProject, requireProjectUri } from './project';
+import { loadSourceMap } from './assembler';
 import * as emu from './emu';
 
 interface ILaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
@@ -95,8 +96,7 @@ export class KCIDEDebugSession extends DebugSession {
     private nativeFsRoot: Uri;
     private curStackFrameId: number = 1;
     private configurationDone = new Subject();
-    private mapSourceToAddr: Record<string, Array<number>> = {};
-    private mapAddrToSource: Array<{ source: string, line: number }> = [];
+    private sourceMap: SourceMap | undefined = undefined;
     private sourceBreakpoints: Array<ISourceRuntimeBreakpoint> = [];
     private instrBreakpoints: Array<IInstructionRuntimeBreakpoint> = [];
     private breakpointId: number = 1;
@@ -165,8 +165,7 @@ export class KCIDEDebugSession extends DebugSession {
         try {
             const project = await loadProject();
             const binUri = getOutputBinFileUri(project);
-            const mapUri = getOutputMapFileUri(project);
-            await this.loadMapFile(mapUri);
+            this.sourceMap = await loadSourceMap(project, KCIDEDebugSession.wasmFsRoot.length);
             await emu.ensureEmulator(project);
             await emu.waitReady(5000);
             await emu.dbgConnect();
@@ -478,30 +477,11 @@ export class KCIDEDebugSession extends DebugSession {
         this.sendResponse(response);
     }
 
-    private async loadMapFile(uri: Uri) {
-        const lines = await readTextFile(uri);
-        const wasmFsRootIndex = KCIDEDebugSession.wasmFsRoot.length;
-        lines.split('\n').forEach((line) => {
-            const parts = line.trim().split(':');
-            if (parts.length !== 3) {
-                return;
-            }
-            // removing leading '/workspace/'
-            const pathStr = parts[0].slice(wasmFsRootIndex);
-            const lineNr = parseInt(parts[1]);
-            const addr = parseInt(parts[2]);
-            if (this.mapSourceToAddr[pathStr] === undefined) {
-                this.mapSourceToAddr[pathStr] = [];
-            }
-            if (this.mapSourceToAddr[pathStr][lineNr] === undefined) {
-                this.mapSourceToAddr[pathStr][lineNr] = addr;
-            }
-            this.mapAddrToSource[addr] = { source: pathStr, line: lineNr };
-        });
-    }
-
     private getLocationByAddr(addr: number): { uri: Uri, line: number, addr: number } | undefined {
-        const loc = this.mapAddrToSource[addr];
+        if (this.sourceMap === undefined) {
+            throw new Error('No source map loaded!');
+        }
+        const loc = this.sourceMap.addrToSource[addr];
         if (loc === undefined) {
             return undefined;
         }
@@ -555,10 +535,13 @@ export class KCIDEDebugSession extends DebugSession {
     }
 
     private addSourceBreakpoint(uri: Uri, line: number): ISourceRuntimeBreakpoint {
+        if (this.sourceMap === undefined) {
+            throw new Error('No source map loaded!');
+        }
         const workspaceRelativePath = this.getWorkspaceRelativePath(uri);
         let addr = undefined;
-        if (this.mapSourceToAddr[workspaceRelativePath] !== undefined) {
-            addr = this.mapSourceToAddr[workspaceRelativePath][line] ?? undefined;
+        if (this.sourceMap.sourceToAddr[workspaceRelativePath] !== undefined) {
+            addr = this.sourceMap.sourceToAddr[workspaceRelativePath][line] ?? undefined;
         }
         const bp: ISourceRuntimeBreakpoint = {
             verified: addr !== undefined,
@@ -580,14 +563,17 @@ export class KCIDEDebugSession extends DebugSession {
     }
 
     private addInstructionBreakpoint(instructionReference: string, offset: number): IInstructionRuntimeBreakpoint {
+        if (this.sourceMap === undefined) {
+            throw new Error('No source map loaded!');
+        }
         const addr = parseInt(instructionReference) + offset;
         let workspaceRelativePath;
         let uri;
         let line;
-        if (this.mapAddrToSource[addr]) {
-            workspaceRelativePath = this.mapAddrToSource[addr].source;
+        if (this.sourceMap.addrToSource[addr]) {
+            workspaceRelativePath = this.sourceMap.addrToSource[addr].source;
             uri = Uri.joinPath(this.nativeFsRoot, workspaceRelativePath);
-            line = this.mapAddrToSource[addr].line;
+            line = this.sourceMap.addrToSource[addr].line;
         }
         const bp: IInstructionRuntimeBreakpoint = {
             uri,
@@ -637,7 +623,10 @@ export class KCIDEDebugSession extends DebugSession {
     // this is a bit of a hack to automatically open the disassembly view when the debugger
     // is stopped in an unknown location
     private async openDisassemblyViewIfStoppedInUnmappedLocation() {
-        if ((this.curAddr !== undefined) && (this.mapAddrToSource[this.curAddr] === undefined)) {
+        if (this.sourceMap === undefined) {
+            throw new Error('No source map loaded!');
+        }
+        if ((this.curAddr !== undefined) && (this.sourceMap.addrToSource[this.curAddr] === undefined)) {
             await vscode.commands.executeCommand('debug.action.openDisassemblyView');
             const tabs = vscode.window.tabGroups.all.map(tg => tg.tabs).flat();
             const index = tabs.findIndex((tab) => tab.label === 'Unknown Source');

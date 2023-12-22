@@ -3,7 +3,7 @@ import {
     ExtensionContext,
     Uri,
 } from 'vscode';
-import { Project, FileType } from './types';
+import { Project, FileType, SourceMap } from './types';
 import {
     uriToWasmPath,
     dirExists,
@@ -125,4 +125,31 @@ export async function writeOutputFile(project: Project, hexUri: Uri, withAutoSta
     const uri = getOutputBinFileUri(project);
     await writeBinaryFile(uri, data);
     return uri;
+}
+
+export async function loadSourceMap(project: Project, fsRootLength: number): Promise<SourceMap> {
+    const map: SourceMap = {
+        sourceToAddr: {},
+        addrToSource: [],
+    };
+    const uri = getOutputMapFileUri(project);
+    const lines = await readTextFile(uri);
+    lines.split('\n').forEach((line) => {
+        const parts = line.trim().split(':');
+        if (parts.length !== 3) {
+            return;
+        }
+        // remove leading '/workspace/'
+        const pathStr = parts[0].slice(fsRootLength);
+        const lineNr = parseInt(parts[1]);
+        const addr = parseInt(parts[2]);
+        if (map.sourceToAddr[pathStr] === undefined) {
+            map.sourceToAddr[pathStr] = [];
+        }
+        if (map.sourceToAddr[pathStr][lineNr] === undefined) {
+            map.sourceToAddr[pathStr][lineNr] = addr;
+        }
+        map.addrToSource[addr] = { source: pathStr, line: lineNr };
+    });
+    return map;
 }

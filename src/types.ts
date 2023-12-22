@@ -62,6 +62,11 @@ export type DisasmLine = {
     chars: string,
 };
 
+export type SourceMap = {
+    sourceToAddr: Record<string, Array<number>>,
+    addrToSource: Array<{ source: string, line: number}>;
+};
+
 export function isValidString(val: unknown): val is string {
     if (typeof val !== 'string') {
         return false;
