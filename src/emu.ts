@@ -9,6 +9,7 @@ import { System, Project, CPUState, DisasmLine, FileType } from './types';
 import { readTextFile, getExtensionUri } from './filesystem';
 import { loadProject } from './project';
 import { loadSymbolMap } from './assembler';
+import { toContainerFile } from './filetypes';
 
 interface State {
     panel: WebviewPanel;
@@ -144,49 +145,10 @@ export async function load(project: Project, data: Uint8Array, start: boolean, s
         if (startAddr === undefined) {
             throw new Error('No \'_start\' label found in project!');
         }
-
         // wrap KCC, PRG, etc... into our own container format
-        const hdrLength = 16;
-        const container = new Uint8Array(hdrLength + data.length);
-        // 4 bytes magic number
-        container[0] = 'K'.charCodeAt(0);
-        container[1] = 'C'.charCodeAt(0);
-        container[2] = 'I'.charCodeAt(0);
-        container[3] = 'D'.charCodeAt(0);
-        // 4 bytes file format ('KCC', 'PRG', ...)
-        if (project.assembler.outFiletype === FileType.KCC) {
-            container[4] = 'K'.charCodeAt(0);
-            container[5] = 'C'.charCodeAt(0);
-            container[6] = 'C'.charCodeAt(0);
-            container[7] = ' '.charCodeAt(0);
-        } else if (project.assembler.outFiletype === FileType.PRG) {
-            container[4] = 'P'.charCodeAt(0);
-            container[5] = 'R'.charCodeAt(0);
-            container[6] = 'G'.charCodeAt(0);
-            container[7] = ' '.charCodeAt(0);
-        } else {
-            container[4] = '?'.charCodeAt(0);
-            container[5] = '?'.charCodeAt(0);
-            container[6] = '?'.charCodeAt(0);
-            container[7] = '?'.charCodeAt(0);
-        }
-        // 2 bytes start address (little endian)
-        container[8] = startAddr & 0xFF;
-        container[9] = (startAddr & 0xFF00) >> 8;
-        // 1 byte flags
-        container[10] = (start ? (1<<0) : 0) | (stopOnEntry ? (1<<1) : 0);
-        // 5 bytes reserved
-        container[11] = 0;
-        container[12] = 0;
-        container[13] = 0;
-        container[14] = 0;
-        container[15] = 0;
-
-        // payload
-        container.set(data, hdrLength);
-
+        const container = toContainerFile(data, project.assembler.outFiletype, startAddr, start, stopOnEntry);
         const containerBase64 = toBase64(container);
-        await state.panel.webview.postMessage({ cmd: 'load', data: container });
+        await state.panel.webview.postMessage({ cmd: 'load', data: containerBase64 });
     } else {
         throw new Error('Emulator not initialized!');
     }

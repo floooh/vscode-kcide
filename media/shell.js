@@ -30,7 +30,7 @@ function kcide_init() {
             case 'boot': kcide_boot(); break;
             case 'reset': kcide_reset(); break;
             case 'ready': kcide_ready(); break;
-            case 'load': kcide_load(msg.data, msg.start, msg.stopOnEntry); break;
+            case 'load': kcide_load(msg.data); break;
             case 'connect': kcide_dbgConnect(); break;
             case 'disconnect': kcide_dbgDisconnect(); break;
             case 'updateBreakpoints': kcide_dbgUpdateBreakpoints(msg.removeAddrs, msg.addAddrs); break;
@@ -86,7 +86,7 @@ function kcide_ready() {
  * @param {boolean} start
  * @param {boolean} stopOnEntry
  */
-function kcide_load(dataBase64, start, stopOnEntry) {
+function kcide_load(dataBase64) {
     // NOTE: transfering ArrayBuffer objects is broken when running as web extension,
     // thus any binary data needs to be transferred as base64 encoded string
     const binStr = atob(dataBase64);
@@ -97,7 +97,9 @@ function kcide_load(dataBase64, start, stopOnEntry) {
     const size = bin.length;
     const ptr = Module._webapi_alloc(size);
     Module.HEAPU8.set(bin, ptr);
-    Module._webapi_quickload(ptr, size, start ? 1:0, stopOnEntry ? 1:0);
+    if (!Module._webapi_load(ptr, size)) {
+        console.warn('_webapi_load() returned false');
+    }
     Module._webapi_free(ptr);
 }
 

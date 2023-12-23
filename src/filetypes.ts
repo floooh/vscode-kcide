@@ -1,4 +1,6 @@
 // see: https://en.wikipedia.org/wiki/Intel_HEX
+import { Project, FileType } from './types';
+
 
 function findMinMaxAddr(lines: string[]): { minAddr: number, maxAddr: number } {
     let minAddr = 0xFFFF;
@@ -36,11 +38,9 @@ function appendHexData(arr: Uint8Array, minAddr: number, headerSize: number, lin
     });
 }
 
-// FIXME: add this stuff right into asmx?
-export function hexToKCC(hex: string, withExecAddr: boolean) {
+export function hexToKCC(hex: string, execAddr: number, withExecAddr: boolean) {
     const lines = hex.split('\n');
     const { minAddr, maxAddr } = findMinMaxAddr(lines);
-    const execAddr = minAddr;
 
     // generate KCC header
     const kccHeaderSize = 128;
@@ -78,4 +78,46 @@ export function hexToPRG(hex: string) {
     prg[1] = (minAddr & 0xFF00) >> 8;
     appendHexData(prg, minAddr, prgHeaderSize, lines);
     return prg;
+}
+
+// wrap an emulator specific data blob into a container file
+export function toContainerFile(data: Uint8Array, type: FileType, startAddr: number, start: boolean, stopOnEntry: boolean): Uint8Array {
+    const hdrLength = 16;
+    const container = new Uint8Array(hdrLength + data.length);
+    // 4 bytes magic number
+    container[0] = 'C'.charCodeAt(0);
+    container[1] = 'H'.charCodeAt(0);
+    container[2] = 'I'.charCodeAt(0);
+    container[3] = 'P'.charCodeAt(0);
+    // 4 bytes file format ('KCC', 'PRG', ...)
+    if (type === FileType.KCC) {
+        container[4] = 'K'.charCodeAt(0);
+        container[5] = 'C'.charCodeAt(0);
+        container[6] = 'C'.charCodeAt(0);
+        container[7] = ' '.charCodeAt(0);
+    } else if (type === FileType.PRG) {
+        container[4] = 'P'.charCodeAt(0);
+        container[5] = 'R'.charCodeAt(0);
+        container[6] = 'G'.charCodeAt(0);
+        container[7] = ' '.charCodeAt(0);
+    } else {
+        container[4] = '?'.charCodeAt(0);
+        container[5] = '?'.charCodeAt(0);
+        container[6] = '?'.charCodeAt(0);
+        container[7] = '?'.charCodeAt(0);
+    }
+    // 2 bytes start address (little endian)
+    container[8] = startAddr & 0xFF;
+    container[9] = (startAddr & 0xFF00) >> 8;
+    // 1 byte flags
+    container[10] = (start ? (1<<0) : 0) | (stopOnEntry ? (1<<1) : 0);
+    // 5 bytes reserved
+    container[11] = 0;
+    container[12] = 0;
+    container[13] = 0;
+    container[14] = 0;
+    container[15] = 0;
+
+    container.set(data, hdrLength);
+    return container;
 }

@@ -42,8 +42,8 @@ export async function asmRun(ext: ExtensionContext) {
         if (result.diagnostics.numErrors === 0) {
             const binUri = await writeOutputFile(project, result.objectUri!, true);
             // start directly without debug session
-            const bin = await readBinaryFile(binUri);
-            await emu.load(project, bin, true, false);
+            const binData = await readBinaryFile(binUri);
+            await emu.load(project, binData, true, false);
         } else {
             window.showErrorMessage(`Build failed with ${result.diagnostics.numErrors} error(s)`);
         }

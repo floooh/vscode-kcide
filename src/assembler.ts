@@ -121,7 +121,12 @@ export async function writeOutputFile(project: Project, hexUri: Uri, withAutoSta
     const hexData = await readTextFile(hexUri);
     let data;
     if (project.assembler.outFiletype === FileType.KCC) {
-        data = hexToKCC(hexData, withAutoStart);
+        const symbolMap = await loadSymbolMap(project);
+        const startAddr = symbolMap['_start'];
+        if (startAddr === undefined) {
+            throw new Error('No \'_start\' label found in project!');
+        }
+        data = hexToKCC(hexData, startAddr, withAutoStart);
     } else if (project.assembler.outFiletype === FileType.PRG) {
         data = hexToPRG(hexData);
     } else {
