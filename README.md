@@ -1,4 +1,8 @@
-An assembler IDE for KC85/3 and KC85/4 computers...
+An assembler IDE for 8-bit home computers:
+
+- KC85/3
+- KC85/4
+- C64
 
 ![screenshot-1](/screenshots/vscode-kcide-1.webp)
 
@@ -13,7 +17,7 @@ Please make sure to install the **pre-release** version!
 This is currently required because the dependency extension [`ms-vscode.wasm-wasi-core`](https://marketplace.visualstudio.com/items?itemName=ms-vscode.wasm-wasi-core)
 only exists as pre-release.
 
-## Quickstart
+## KC85 Quickstart
 
 With the **pre-release version** of the extension installed:
 
@@ -28,21 +32,26 @@ With the **pre-release version** of the extension installed:
 - with the `src/main` file loaded and active, press **F5** to start a debug session
 - explore additional features by opening the VSCode command palette and typing `kcide`
 
+## C64 Quickstart
+
+(TODO)
+
 ## Feature Overview
 
-- build the project into a KCC file by pressing **F7**
+- build the project into a KCC or PRG file by pressing **F7**
 - build and debug the project by pressing **F5**
 - explore additional commands in the command palette by typing `kcide`
 - the assembler is a slightly extended [ASMX](http://svn.xi6.com/svn/asmx/branches/2.x/asmx-doc.html) compiled to WASI, the changes are tracked [here](https://github.com/floooh/easmx)
-- the KC85/3 and /4 emulators are taken from the [chips project](https://floooh.github.io/tiny8bit/) compiled to WASM+WebGL, running in a VSCode tab
-- syntax highlighting is provided by https://github.com/mborik/z80-macroasm-vscode/blob/main/syntaxes/z80-macroasm.tmLanguage.json
+- the emulators are taken from the [chips project](https://floooh.github.io/tiny8bit/) compiled to WASM+WebGL, running in a VSCode tab
+- original syntax highlighting https://github.com/mborik/z80-macroasm-vscode/blob/main/syntaxes/z80-macroasm.tmLanguage.json,
+  extended for 6502 assembler syntax and special ASMX keywords
 - during a debug session, you can change into the 'raw' disassembly view at any time by running the palette command `Open Disassembly View`, this also happens automatically when stepping into code
 that's not part of the project (such as operating system code)
 - you can inspect memory by hovering over a CPU register in the VSCode `Variables` panel and clicking
 the 'binary' icon with the tooltip `View Binary Data`, however note that the emulator's integrated
 debugging UI has a much more powerful memory viewer and editor than what VSCode can provide through the Debug Adapter Protocol
 
-## Starting a new project
+## Starting a new KC85 project
 
 - create a new project directory and cd into it
 - create a file `project.kcide.json` looking like this, tweak the attributes as needed (the extension provides a JSON schema to VSCode to provide completion and validation):
@@ -76,6 +85,8 @@ debugging UI has a much more powerful memory viewer and editor than what VSCode 
 
 - test building by pressing **F7** or running the palette command `KCIDE: Build`
 - test debugging by pressing **F5** or running the palette command `KCIDE: Debug`
+
+## Starting a new C64 project
 
 ## The integrated debugging UI
 

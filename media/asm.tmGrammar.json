@@ -29,7 +29,7 @@
     "comments": {
       "patterns": [
         {
-          "name": "comment.line.z80asm",
+          "name": "comment.line.kcide",
           "begin": ";",
           "end": "\\n"
         }
@@ -38,57 +38,61 @@
     "keywords": {
       "patterns": [
         {
-          "name": "keyword.control.z80asm",
+          "name": "keyword.control.kcide",
           "match": "(?i:(?<=\\s)(?:equ|eval|[fr]?org|end?t|align|(?:de|un)?phase|shift|save(?:bin|dev|hob|nex|sna|tap|trd)|empty(?:tap|trd)|inc(?:bin|hob|trd)|binclude|includelua|insert|binary|end|out(?:put|end)|tap(?:out|end)|fpos|fname|slot|size|opt)\\b)"
         },
         {
-          "name": "keyword.control.z80asm",
+          "name": "keyword.control.kcide",
           "match": "(?i:(?<=\\s)(?:cpu|device|proc|macro|label|local|global|shared|public|forward|rept|e?dup|block|end[mprsw]|exitm|module|endmod(?:ule)?|(?:un)?define|export|disp|textarea|map|mmu|field|defarray|segment|restore|pushv|popv|enum|enumconf|nextenum)\\b)"
         },
         {
-          "name": "keyword.control.z80asm",
+          "name": "keyword.control.kcide",
           "match": "(?i:(?<=\\s)(?:assert|fatal|error|warning|message|display|print|title|prtit|prtexit|fail|shellexec|def[bdghlmswir]|d[bcghmswz]|abyte[cz]?|byte|d?word|hex)\\b)"
         },
         {
-          "name": "keyword.control.z80asm",
+          "name": "keyword.control.kcide",
           "match": "(?i:(?<=\\s)(?:page|newpage|radix|outradix|encoding|charset|codepage|macexp_(?:dft|ovr)|listing|(?:end)?struct|(?:end)?section|maxnest)\\b)"
         },
         {
-          "name": "keyword.control.z80asm",
+          "name": "keyword.control.kcide",
           "match": "(?i:(?<=\\s)(?:if|ifn?def|ifn?used|ifn?exist|else|elseif|endif)\\b)"
         },
         {
-          "name": "keyword.control.z80asm",
+          "name": "keyword.control.kcide",
           "match": "(?i:(?<=\\s)(?:bank|bankset|limit|protect|write\\s+direct|str)\\b)"
         },
         {
-          "name": "keyword.control.z80asm",
+          "name": "keyword.control.kcide",
           "match": "(?i:(?<=\\s)(?:inc(?:l4[89]|lz4|zx7|exo)|lz(?:4[89]?|w7|exo|close)|read)\\b)"
         },
         {
-          "name": "keyword.control.z80asm",
+          "name": "keyword.control.kcide",
           "match": "(?i:(?<=\\s)(?:repeat|while|[rw]end|until|(?:end)?switch|(?:else|end)?case|default|break|stop|function)\\b)"
         },
         {
-          "name": "keyword.control.z80asm",
+          "name": "keyword.control.kcide",
           "match": "(?i:(?<=\\s)(?:amsdos|breakpoint|buildcpr|buildsna|run|save|setcpc|setcrtc)\\b)"
         },
         {
-          "name": "keyword.control.z80asm",
+          "name": "keyword.control.kcide",
           "match": "(?i:(?<=\\s)(?:list|nolist|let|labelslist|bplist|setbp|setbreakpoint|cspectmap)\\b)"
         },
         {
-          "name": "string.other.lua.z80asm",
+          "name": "keyword.control.kcide",
+          "match": "(?i:(?<=\\s)(?:ascic|even|elsif|processor|seg|rseg|subroutine|subr|zscii)\\b)"
+        },
+        {
+          "name": "string.other.lua.kcide",
           "begin": "(?i:(?<=\\s)(lua)\\b)",
           "beginCaptures": {
             "1": {
-              "name": "keyword.control.z80asm"
+              "name": "keyword.control.kcide"
             }
           },
           "end": "(?i:(?<=\\s)(endlua)\\b)",
           "endCaptures": {
             "1": {
-              "name": "keyword.control.z80asm"
+              "name": "keyword.control.kcide"
             }
           }
         }
@@ -100,25 +104,33 @@
           "match": "(?i:(af'))",
           "captures": {
             "1": {
-              "name": "support.type.register.z80asm"
+              "name": "support.type.register.kcide.z80"
             }
           }
         },
         {
-          "name": "string.quoted.single.z80asm",
+          "name": "constant.numeric.immediate.kcide.m6502",
+          "match": "#"
+        },
+        {
+          "name": "constant.numeric.parenthesis.kcide",
+          "match": "\\(|\\)"
+        },
+        {
+          "name": "string.quoted.single.kcide",
           "begin": "'",
           "beginCaptures": {
             "0": {
-              "name": "punctuation.definition.string.begin.z80asm"
+              "name": "punctuation.definition.string.begin.kcide"
             }
           },
           "end": "(\\')|((?:[^\\\\\\n])$)",
           "endCaptures": {
             "1": {
-              "name": "punctuation.definition.string.end.z80asm"
+              "name": "punctuation.definition.string.end.kcide"
             },
             "2": {
-              "name": "invalid.illegal.newline.z80asm"
+              "name": "invalid.illegal.newline.kcide"
             }
           },
           "patterns": [
@@ -128,20 +140,20 @@
           ]
         },
         {
-          "name": "string.quoted.double.z80asm",
+          "name": "string.quoted.double.kcide",
           "begin": "\"",
           "beginCaptures": {
             "0": {
-              "name": "punctuation.definition.string.begin.z80asm"
+              "name": "punctuation.definition.string.begin.kcide"
             }
           },
           "end": "(\")|((?:[^\\\\\\n])$)",
           "endCaptures": {
             "1": {
-              "name": "punctuation.definition.string.end.z80asm"
+              "name": "punctuation.definition.string.end.kcide"
             },
             "2": {
-              "name": "invalid.illegal.newline.z80asm"
+              "name": "invalid.illegal.newline.kcide"
             }
           },
           "patterns": [
@@ -155,7 +167,7 @@
     "string-character-escape": {
       "patterns": [
         {
-          "name": "constant.character.escape.z80asm",
+          "name": "constant.character.escape.kcide",
           "match": "\\\\(x[0-9A-Fa-f]{2}|[0-2][0-7]{0,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.|$)"
         }
       ]
@@ -163,45 +175,53 @@
     "mnemonics": {
       "patterns": [
         {
-          "name": "support.type.flag.z80asm",
+          "name": "support.type.flag.kcide",
           "match": "\\b(?i:(j[pr]|call|ret))(?:\\s+(?i:([cmpz]|n[cz]|p[eo])))?\\b",
           "captures": {
             "1": {
-              "name": "keyword.mnemonic.z80asm"
+              "name": "keyword.mnemonic.kcide.z80"
             },
             "2": {
-              "name": "meta.preprocessor.flag.z80asm"
+              "name": "meta.preprocessor.flag.kcide.z80"
             }
           }
         },
         {
-          "name": "support.type.flag.z80asm",
+          "name": "support.type.flag.kcide",
           "match": "\\b(?i:z80|r800|msx|gbz80|zxspectrum(?:48|128|256|512|1024)|(?:no)?(?:expand|expif|expmacro|export|intlabel|globalsymbols))\\b"
         },
         {
-          "name": "constant.numeric.operator.z80asm",
+          "name": "constant.numeric.operator.kcide",
           "match": "\\b(?i:high|low|not|mod|sh[lr])\\b",
           "comment": "sjasm numeric operators"
         },
         {
-          "name": "constant.numeric.function.z80asm",
+          "name": "constant.numeric.function.kcide",
           "match": "\\b(?i:sqrt|a?sinh?|a?cosh?|a?tanh?|a?coth?|exp|alog|a?ld|ln|log|int|bitcnt|firstbit|lastbit|bitpos|sgn|abs|toupper|tolower|upstring|lowstring|strlen|substr|charfromstr|strstr|val|exprtype)\\b",
           "comment": "AS macroassembler functions"
         },
         {
-          "name": "keyword.mnemonic.z80asm",
+          "name": "keyword.mnemonic.kcide",
           "match": "\\s(?i:ad[cd]|and|bit|ccf|cp|cp[di]r?|cpl|daa|dec|[de]i|djnz|ex[adx]?|halt|i[mn]|inc|in[di]r?|ld|ld[di]r?|neg|nop|or|ot[di]r|out|out[di]|pop|push|res|ret[in]|rla?|rlca?|r[lr]d|rra?|rrca?|rst|sbc|scf|set|s[lr]a|s[lr]l|slia|sl1|sub|x?or)\\s"
         },
         {
-          "name": "keyword.mnemonic.z80asm",
+          "name": "keyword.mnemonic.kcide",
           "match": "\\s(?i:swap|ldir?x|ldws|lddr?x|ldpirx|outinb|swapnib|mul|mirror|nextreg|pixel(ad|dn)|setae|te?st|bs[lr]a|bsr[lf]|brlc)\\s"
         },
         {
-          "name": "support.type.register.z80asm",
+          "name": "keyword.mnemonic.kcide.m6502",
+          "match": "\\s(?i:adc|and|asl|bc[cs]|beq|bit|bmi|bne|bpl|brk|bv[cs]|cl[cdiv]|cmp|cp[xy]|de[cxy]|eor|in[cxy]|j[mp|sr]|ld[axy]|lsr|nop|ora|ph[ap]|pl[ap]|ro[lr]|rt[is]|sbc|se[cdi]|st[axy]|ta[xy]|tsx|tx[as]|tya)\\s"
+        },
+        {
+          "name": "support.type.register.kcide.z80",
           "match": "\\b(?i:[abcdefhlir]|ix|iy|af'?|bc|de|hl|pc|sp|ix[hlu]|iy[hlu]|[lh]x|x[lh]|[lh]y|y[lh])\\b"
         },
         {
-          "name": "constant.language.operator.z80asm",
+          "name": "support.type.register.kcide.m6502",
+          "match": "\\b(?i:a|x|y)\\b"
+        },
+        {
+          "name": "constant.language.operator.kcide",
           "match": "(?i:\\{(?:hex[248]?|bin(?:8|16|32)?|int|eval|r[bw])?\\})"
         }
       ]
@@ -213,43 +233,43 @@
           "match": "^\\{5}"
         },
         {
-          "name": "constant.numeric.integer.hexadecimal.z80asm",
-          "match": "[\\$#][0-9a-fA-F]+"
+          "name": "constant.numeric.integer.hexadecimal.kcide",
+          "match": "[\\$][0-9a-fA-F]+"
         },
         {
-          "name": "constant.numeric.integer.hexadecimal.z80asm",
+          "name": "constant.numeric.integer.hexadecimal.kcide",
           "match": "(\\-?[0-9a-fA-F]+[hH])\\b"
         },
         {
-          "name": "constant.numeric.integer.hexadecimal.z80asm",
+          "name": "constant.numeric.integer.hexadecimal.kcide",
           "match": "(\\-?0x[0-9a-fA-F]+)\\b"
         },
         {
-          "name": "constant.numeric.integer.octal.z80asm",
+          "name": "constant.numeric.integer.octal.kcide",
           "match": "@[0-7]+"
         },
         {
-          "name": "constant.numeric.integer.octal.z80asm",
+          "name": "constant.numeric.integer.octal.kcide",
           "match": "\\-?[0-7]+[oO]\\b"
         },
         {
-          "name": "constant.numeric.integer.octal.z80asm",
+          "name": "constant.numeric.integer.octal.kcide",
           "match": "(\\-?0q?[0-7]+)\\b"
         },
         {
-          "name": "constant.numeric.integer.binary.z80asm",
+          "name": "constant.numeric.integer.binary.kcide",
           "match": "%[01]+\\b"
         },
         {
-          "name": "constant.numeric.integer.binary.z80asm",
+          "name": "constant.numeric.integer.binary.kcide",
           "match": "\\b[01]+[bB]\\b"
         },
         {
-          "name": "constant.numeric.integer.binary.z80asm",
+          "name": "constant.numeric.integer.binary.kcide",
           "match": "(\\-?0b[01]+)\\b"
         },
         {
-          "name": "constant.numeric.integer.decimal.z80asm",
+          "name": "constant.numeric.integer.decimal.kcide",
           "match": "\\-?\\d+"
         }
       ]
@@ -260,10 +280,10 @@
           "match": "(?i:(?<=\\s)(include)\\s+(([\"'])(?:[^\\3]+)\\3))",
           "captures": {
             "1": {
-              "name": "keyword.control.z80asm"
+              "name": "keyword.control.kcide"
             },
             "2": {
-              "name": "string.modifier.import.z80asm"
+              "name": "string.modifier.import.kcide"
             }
           }
         }
@@ -275,13 +295,13 @@
           "match": "^\\@?((\\$\\$(?!\\.))?[\\w\\.]+):?(?=\\s)",
           "captures": {
             "1": {
-              "name": "entity.name.function.z80asm"
+              "name": "entity.name.function.kcide"
             }
           }
         },
         {
-          "match": "\\b([a-zA-Z][\\w\\.]+)\\b",
-          "name": "variable.parameter.label.z80asm"
+          "match": "\\b([a-zA-Z_][\\w\\.]+)\\b",
+          "name": "variable.parameter.label.kcide"
         }
       ]
     }
