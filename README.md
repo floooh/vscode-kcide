@@ -1,11 +1,8 @@
-An assembler IDE for 8-bit home computers:
+An assembler IDE for 8-bit home computers (currently KC85/3, KC85/4 and C64) with integrated assembler and debugger.
 
-- KC85/3 and KC85/4
-- C64
+## Screenshots
 
 ![screenshot-1](/screenshots/vscode-kcide-1.webp)
-
-...with integrated debugger:
 
 ![screenshot-3](/screenshots/vscode-kcide-3.webp)
 
