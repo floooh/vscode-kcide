@@ -1,7 +1,6 @@
 An assembler IDE for 8-bit home computers:
 
-- KC85/3
-- KC85/4
+- KC85/3 and KC85/4
 - C64
 
 ![screenshot-1](/screenshots/vscode-kcide-1.webp)
@@ -22,8 +21,7 @@ only exists as pre-release.
 With the **pre-release version** of the extension installed:
 
 - clone https://github.com/floooh/kcide-sample
-- open VSCode inside the `kcide-sample` directory, or open the `kcide-sample`
-  folder in VSCode
+- open VSCode in the `kcide-sample/kc854` subdirectory
 - the extension should detect the `kcide.project.json` file and activate itself
   (a new tab should open with the embedded emulator)
 - open the `src/main.asm` file, and hit **F7**, you should see a message
