@@ -26,15 +26,20 @@ export function updateDiagnostics(project: Project, stderr: string, symbolMap: S
     clearDiagnostics();
     const diagnostics = requireDiagnosticCollection();
     const diagnosticsInfo = parseDiagnostics(project.uri, stderr);
-    if (symbolMap['_start'] === undefined) {
-        diagnosticsInfo.numErrors += 1;
-        diagnosticsInfo.diagnostics = [
-            ...diagnosticsInfo.diagnostics,
-            [
-                Uri.joinPath(project.uri, project.assembler.srcDir, project.assembler.mainSourceFile),
-                [new Diagnostic(new Range(0, 0, 0, 255), 'Project is missing a \'_start\' label', DiagnosticSeverity.Error)],
-            ]
-        ];
+    if (diagnosticsInfo.numErrors === 0) {
+        // check that the project has a '_start' label, only do this when there
+        // are no other errors, otherwise the 'missing _start label' error would
+        // also trigger even there's a _start label, which is quite confusing
+        if (symbolMap['_start'] === undefined) {
+            diagnosticsInfo.numErrors += 1;
+            diagnosticsInfo.diagnostics = [
+                ...diagnosticsInfo.diagnostics,
+                [
+                    Uri.joinPath(project.uri, project.assembler.srcDir, project.assembler.mainSourceFile),
+                    [new Diagnostic(new Range(0, 0, 0, 255), 'Project is missing a \'_start\' label', DiagnosticSeverity.Error)],
+                ]
+            ];
+        }
     }
     diagnostics.set(diagnosticsInfo.diagnostics);
     return diagnosticsInfo;
