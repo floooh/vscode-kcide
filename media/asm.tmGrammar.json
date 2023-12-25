@@ -210,7 +210,7 @@
         },
         {
           "name": "keyword.mnemonic.kcide.m6502",
-          "match": "\\s(?i:adc|and|asl|bc[cs]|beq|bit|bmi|bne|bpl|brk|bv[cs]|cl[cdiv]|cmp|cp[xy]|de[cxy]|eor|in[cxy]|j[mp|sr]|ld[axy]|lsr|nop|ora|ph[ap]|pl[ap]|ro[lr]|rt[is]|sbc|se[cdi]|st[axy]|ta[xy]|tsx|tx[as]|tya)\\s"
+          "match": "\\s(?i:adc|and|asl|bc[cs]|beq|bit|bmi|bne|bpl|brk|bv[cs]|cl[cdiv]|cmp|cp[xy]|de[cxy]|eor|in[cxy]|jmp|jsr|ld[axy]|lsr|nop|ora|ph[ap]|pl[ap]|ro[lr]|rt[is]|sbc|se[cdi]|st[axy]|ta[xy]|tsx|tx[as]|tya)\\s"
         },
         {
           "name": "support.type.register.kcide.z80",
