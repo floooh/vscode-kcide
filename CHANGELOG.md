@@ -5,6 +5,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+## [1.6.0] - 2023-12-25
+
 ### Changed
 
 - Breaking change: projects must now have a special `_start` label which defined the entry point of the program

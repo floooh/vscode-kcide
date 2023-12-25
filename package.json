@@ -3,7 +3,7 @@
   "private": "true",
   "displayName": "KC IDE",
   "description": "8-bit Assembly IDE (for KC85/3, KC85/4 and C64)",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "author": "Andre Weissflog",
   "publisher": "floooh",
   "repository": {
@@ -19,8 +19,12 @@
   "keywords": [
     "retro-computing",
     "assembler",
-    "kc85", "kc85/3", "kc85/4", "c64",
-    "z80", "6502",
+    "kc85",
+    "kc85/3",
+    "kc85/4",
+    "c64",
+    "z80",
+    "6502",
     "ide"
   ],
   "icon": "media/kc85-logo.png",
