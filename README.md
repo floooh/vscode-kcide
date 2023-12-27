@@ -4,6 +4,8 @@ An assembler IDE for 8-bit home computers (currently KC85/3, KC85/4 and C64) wit
 
 ![screenshot-1](/screenshots/vscode-kcide-1.webp)
 
+![screenshot-4](/screenshots/vscode-kcide-4.webp)
+
 ![screenshot-3](/screenshots/vscode-kcide-3.webp)
 
 ## Installation
@@ -20,7 +22,7 @@ With the **pre-release version** of the extension installed:
 - clone https://github.com/floooh/kcide-sample
 - open VSCode in the `kcide-sample/kc854` subdirectory
 - the extension should detect the `kcide.project.json` file and activate itself
-  (a new tab should open with the embedded emulator)
+  (a new tab should open with the embedded KC85/4 emulator)
 - open the `src/main.asm` file, and hit **F7**, you should see a message
   `Output written to ...`, and a new subdirectory `build/` should have been
   created with the files `out.hex`, `out.kcc`, `out.lst` and `out.map`
@@ -29,7 +31,17 @@ With the **pre-release version** of the extension installed:
 
 ## C64 Quickstart
 
-(TODO)
+With the **pre-release version** of the extension installed:
+
+- clone https://github.com/floooh/kcide-sample
+- open VSCode in the `kcide-sample/c64` subdirectory
+- the extension should detect the `kcide.project.json` file and activate itself
+  (a new tab should open with the embedded C64 emulator)
+- open the `src/main.asm` file, and hit **F7**, you should see a message
+  `Output written to ...`, and a new subdirectory `build/` should have been
+  created with the files `out.hex`, `out.prg`, `out.lst` and `out.map`
+- with the `src/main` file loaded and active, press **F5** to start a debug session
+- explore additional features by opening the VSCode command palette and typing `kcide`
 
 ## Feature Overview
 
@@ -68,10 +80,11 @@ debugging UI has a much more powerful memory viewer and editor than what VSCode 
   ```
 - ...also put the `outDir` value into your `.gitignore`
 - create a directory `src/` and in it a file `main.asm` execution will start
-  at the first instruction of that file:
+  at the label `_start`:
 
   ```asm
       org 200h
+  _start:
       ld a,5
       ld b,6
       add a,b
@@ -82,6 +95,42 @@ debugging UI has a much more powerful memory viewer and editor than what VSCode 
 - test debugging by pressing **F5** or running the palette command `KCIDE: Debug`
 
 ## Starting a new C64 project
+
+- create a new project directory and cd into it
+- create a file `project.kcide.json` looking like this, tweak the attributes as needed (the extension provides a JSON schema to VSCode to provide completion and validation):
+
+  ```json
+  {
+      "emulator": {
+          "system": "C64"
+      },
+      "assembler": {
+          "cpu": "6502",
+          "srcDir": "src",
+          "mainSourceFile": "main.asm",
+          "outDir": "build",
+          "outBaseFilename": "out",
+          "outFiletype": "PRG"
+      }
+  }
+  ```
+- ...also put the `outDir` value into your `.gitignore`
+- create a directory `src/` and in it a file `main.asm` execution will start
+  at the first instruction of that file:
+
+  ```asm
+        org $801
+  _start:
+        lda #5
+        clc
+        adc #6
+        rts
+  ```
+
+- test building by pressing **F7** or running the palette command `KCIDE: Build`
+- test debugging by pressing **F5** or running the palette command `KCIDE: Debug`
+- for a more 'idiomatic' C64 PRG sample, check the example project here: https://github.com/floooh/kcide-sample/tree/main/c64
+
 
 ## The integrated debugging UI
 
@@ -95,9 +144,10 @@ The emulator comes with an integrated debugging UI implemented with [Dear ImGui]
   - break on memory access
   - break on IO access
   - break on interrupts
+  - break on specific raster scanlines (C64 only)
 - a much more powerful memory view/edit window
 - an execution history window
-- status windows for the Z80 CPU, PIO and CTC
+- status windows for the CPU and system chips
 - ...and more
 
 ## Running in VSCode for Web

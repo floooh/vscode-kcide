@@ -5,6 +5,12 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Added
+
+- C64 support is now complete. Check the example project here:
+
+  https://github.com/floooh/kcide-sample/tree/main/c64
+
 ## [1.6.0] - 2023-12-25
 
 ### Changed
