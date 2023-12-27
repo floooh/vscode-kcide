@@ -5,6 +5,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+## [1.7.2] - 2023-12-27
+
 ### Changed
 
 - In the readme, move the (quite important) Installation instructions above the screenshots.
