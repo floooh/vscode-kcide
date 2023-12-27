@@ -1,5 +1,12 @@
 An assembler IDE for 8-bit home computers (currently KC85/3, KC85/4 and C64) with integrated assembler and debugger.
 
+## Installation
+
+Please make sure to install the **pre-release** version!
+
+This is currently required because the dependency extension [`ms-vscode.wasm-wasi-core`](https://marketplace.visualstudio.com/items?itemName=ms-vscode.wasm-wasi-core)
+only exists as pre-release.
+
 ## Screenshots
 
 ![screenshot-1](/screenshots/vscode-kcide-1.webp)
@@ -7,13 +14,6 @@ An assembler IDE for 8-bit home computers (currently KC85/3, KC85/4 and C64) wit
 ![screenshot-4](/screenshots/vscode-kcide-4.webp)
 
 ![screenshot-3](/screenshots/vscode-kcide-3.webp)
-
-## Installation
-
-Please make sure to install the **pre-release** version!
-
-This is currently required because the dependency extension [`ms-vscode.wasm-wasi-core`](https://marketplace.visualstudio.com/items?itemName=ms-vscode.wasm-wasi-core)
-only exists as pre-release.
 
 ## KC85 Quickstart
 

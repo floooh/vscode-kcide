@@ -5,6 +5,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Changed
+
+- In the readme, move the (quite important) Installation instructions above the screenshots.
+
 ## [1.7.1] - 2023-12-27
 
 ### Fixed
