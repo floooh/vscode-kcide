@@ -5,6 +5,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed a minor readme typo.
+
 ## [1.7.0] - 2023-12-27
 
 ### Added

@@ -116,7 +116,7 @@ debugging UI has a much more powerful memory viewer and editor than what VSCode 
   ```
 - ...also put the `outDir` value into your `.gitignore`
 - create a directory `src/` and in it a file `main.asm` execution will start
-  at the first instruction of that file:
+  at the label `_start`
 
   ```asm
         org $801
