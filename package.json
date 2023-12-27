@@ -2,7 +2,7 @@
   "name": "vscode-kcide",
   "private": "true",
   "displayName": "KC IDE",
-  "description": "8-bit Assembly IDE (for KC85/3, KC85/4 and C64)",
+  "description": "8-bit Assembly IDE (for KC85/3, KC85/4, C64 and CPC)",
   "version": "1.7.2",
   "author": "Andre Weissflog",
   "publisher": "floooh",
@@ -23,6 +23,7 @@
     "kc85/3",
     "kc85/4",
     "c64",
+    "cpc6128",
     "z80",
     "6502",
     "ide"

@@ -37,6 +37,8 @@ async function setupEmulator(project: Project): Promise<State> {
     );
     if (project.emulator.system === System.C64) {
         panel.iconPath = Uri.joinPath(rootUri, 'c64-logo-small.png');
+    } else if (project.emulator.system === System.CPC6128) {
+        panel.iconPath = Uri.joinPath(rootUri, 'cpc-logo-small.png');
     } else {
         panel.iconPath = Uri.joinPath(rootUri, 'kc85-logo-small.png');
     }
@@ -61,9 +63,10 @@ async function setupEmulator(project: Project): Promise<State> {
 
     let emuFilename;
     switch (project.emulator.system) {
-        case System.KC853: emuFilename = 'kc853-ui.js'; break;
-        case System.C64:   emuFilename = 'c64-ui.js'; break;
-        default:           emuFilename = 'kc854-ui.js'; break;
+        case System.KC853:      emuFilename = 'kc853-ui.js'; break;
+        case System.C64:        emuFilename = 'c64-ui.js'; break;
+        case System.CPC6128:    emuFilename = 'cpc-ui.js'; break;
+        default:                emuFilename = 'kc854-ui.js'; break;
     }
     const emuUri = panel.webview.asWebviewUri(Uri.joinPath(rootUri, emuFilename));
     const shellUri = panel.webview.asWebviewUri(Uri.joinPath(rootUri, 'shell.js'));

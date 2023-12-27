@@ -24,8 +24,8 @@ export type Project = {
 };
 
 export enum CPU { Z80 = 'Z80', M6502 = '6502' };
-export enum System { KC853 = 'KC85/3', KC854 = 'KC85/4', C64 = 'C64' };
-export enum FileType { KCC = 'KCC', PRG = 'PRG' };
+export enum System { KC853 = 'KC85/3', KC854 = 'KC85/4', C64 = 'C64', CPC6128 = 'CPC6128' };
+export enum FileType { KCC = 'KCC', PRG = 'PRG', CPC_BIN = 'CPC_BIN' };
 
 export type CPUState = {
     type: CPU | 'unknown',
