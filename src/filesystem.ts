@@ -84,7 +84,12 @@ export function getOutputMapFileUri(project: Project): Uri {
 }
 
 export function getOutputBinFileUri(project: Project): Uri {
-    const ext = (project.assembler.outFiletype === FileType.KCC) ? 'kcc' : 'prg';
+    let ext;
+    switch (project.assembler.outFiletype) {
+        case FileType.KCC: ext = 'kcc'; break;
+        case FileType.PRG: ext = 'prg'; break;
+        default:           ext = 'bin'; break;
+    }
     return getOutputFileUri(project, `${project.assembler.outBaseFilename}.${ext}`);
 }
 
