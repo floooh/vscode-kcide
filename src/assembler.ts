@@ -19,7 +19,7 @@ import {
     readTextFile
 } from './filesystem';
 import { requireWasiEnv } from './wasi';
-import { hexToKCC, hexToPRG } from './filetypes';
+import { hexToKCC, hexToPRG, hexToAmsDosBin } from './filetypes';
 import { updateDiagnostics } from './diagnostics';
 
 export interface RunAsmxResult {
@@ -120,13 +120,17 @@ export async function assemble(ext: ExtensionContext, project: Project, options:
 export async function writeOutputFile(project: Project, hexUri: Uri, withAutoStart: boolean) {
     const hexData = await readTextFile(hexUri);
     let data;
-    if (project.assembler.outFiletype === FileType.KCC) {
+    if ((project.assembler.outFiletype === FileType.KCC) || (project.assembler.outFiletype === FileType.AMSDOS_BIN)) {
         const symbolMap = await loadSymbolMap(project);
         const startAddr = symbolMap['_start'];
         if (startAddr === undefined) {
             throw new Error('No \'_start\' label found in project!');
         }
-        data = hexToKCC(hexData, startAddr, withAutoStart);
+        if (project.assembler.outFiletype === FileType.KCC) {
+            data = hexToKCC(hexData, startAddr, withAutoStart);
+        } else {
+            data = hexToAmsDosBin(hexData, startAddr);
+        }
     } else if (project.assembler.outFiletype === FileType.PRG) {
         data = hexToPRG(hexData);
     } else {
