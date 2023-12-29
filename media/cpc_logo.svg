@@ -1,13 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg viewBox="13.5059 52.909 466.7751 451.87" width="466.7751" height="451.87" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
-  <defs>
-    <style bx:fonts="Bebas Neue">@import url(https://fonts.googleapis.com/css2?family=Bebas+Neue%3Aital%2Cwght%400%2C400&amp;display=swap);</style>
-  </defs>
-  <path d="M 53.757 52.909 L 147.654 52.909 L 147.654 166.68 L 21.757 166.68 L 21.757 71.815 C 21.757 61.374 36.084 52.909 53.757 52.909 Z" style="stroke: rgb(0, 0, 0); stroke-width: 9px; fill: rgb(191, 3, 3);"/>
-  <path d="M 182.454 52.909 L 312.278 52.909 L 312.278 166.68 L 182.454 166.68 L 182.454 52.909 Z" style="stroke: rgb(0, 0, 0); stroke-width: 9px; fill: rgb(12, 185, 0);"/>
-  <path d="M 182.454 315.099 L 182.454 194.74 L 312.278 194.74 L 312.278 315.099 L 182.454 315.099 Z" style="stroke: rgb(0, 0, 0); stroke-width: 9px; fill: rgb(12, 185, 0);"/>
-  <path d="M 480.281 296.192 C 480.281 306.634 465.954 315.099 448.281 315.099 L 347.078 315.099 L 347.078 194.74 L 480.281 194.74 L 480.281 296.192 Z" style="stroke: rgb(0, 0, 0); stroke-width: 9px; fill: rgb(0, 96, 255);"/>
-  <path d="M 448.281 52.909 C 465.954 52.909 480.281 61.374 480.281 71.815 L 480.281 166.68 L 347.078 166.68 L 347.078 52.909 L 448.281 52.909 Z" style="stroke-width: 9px; fill: rgb(0, 96, 255); stroke: rgb(0, 0, 0);"/>
-  <path d="M 147.654 315.099 L 53.757 315.099 C 36.084 315.099 21.757 306.634 21.757 296.192 L 21.757 194.74 L 147.654 194.74 L 147.654 315.099 Z" style="stroke: rgb(0, 0, 0); stroke-width: 9px; fill: rgb(191, 3, 3);"/>
-  <text style="fill: rgb(100, 100, 100); font-family: 'Bebas Neue'; font-size: 150px; stroke: rgb(0, 0, 0); stroke-width: 4.80418px; text-anchor: middle; text-transform: capitalize; word-spacing: -2.4px; white-space: pre;" transform="matrix(2.6963040828704834, 0, 0, 1.0504310131072998, 17.21018600463868, -19.29726791381836)" x="85.027" y="453.953">CPC</text>
+<svg viewBox="13.42 20 463.193 462.662" width="463.193" height="462.662" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
+  <path style="stroke: rgb(0, 0, 0); stroke-width: 20px; fill: rgb(207, 36, 36);" d="M 43.42 20 H 168.333 V 482.662 H 43.42 A 30 30 0 0 1 13.42 452.662 V 50 A 30 30 0 0 1 43.42 20 Z" bx:shape="rect 13.42 20 154.913 462.662 30 0 0 30 1@c53be450"/>
+  <rect x="168.617" y="20" width="154.913" height="462.662" style="stroke: rgb(0, 0, 0); stroke-width: 20px; fill: rgb(48, 205, 48);"/>
+  <path style="stroke: rgb(0, 0, 0); stroke-width: 20px; fill: rgb(67, 67, 255);" d="M 321.7 20 H 446.613 A 30 30 0 0 1 476.613 50 V 452.662 A 30 30 0 0 1 446.613 482.662 H 321.7 V 20 Z" bx:shape="rect 321.7 20 154.913 462.662 0 30 30 0 1@8377182d"/>
 </svg>
