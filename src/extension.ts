@@ -9,12 +9,6 @@ export async function activate(ext: vscode.ExtensionContext) {
             vscode.commands.registerCommand('floooh.kcide.build', async () => {
                 await commands.asmBuild(ext);
             }),
-            vscode.commands.registerCommand('floooh.kcide.check', async () => {
-                await commands.asmCheck(ext);
-            }),
-            vscode.commands.registerCommand('floooh.kcide.run', async () => {
-                await commands.asmRun(ext);
-            }),
             vscode.commands.registerCommand('floooh.kcide.debug', async () => {
                 await commands.asmDebug(ext);
             }),

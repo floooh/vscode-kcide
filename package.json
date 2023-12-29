@@ -22,8 +22,10 @@
     "kc85",
     "kc85/3",
     "kc85/4",
+    "amstrad",
+    "commodore",
     "c64",
-    "cpc6128",
+    "cpc",
     "z80",
     "6502",
     "ide"
@@ -52,16 +54,6 @@
         "command": "floooh.kcide.build",
         "category": "KCIDE",
         "title": "Build"
-      },
-      {
-        "command": "floooh.kcide.check",
-        "category": "KCIDE",
-        "title": "Check"
-      },
-      {
-        "command": "floooh.kcide.run",
-        "category": "KCIDE",
-        "title": "Run"
       },
       {
         "command": "floooh.kcide.debug",
