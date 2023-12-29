@@ -5,6 +5,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+## [1.8.0] - 2023-12-29
+
 ### Added
 
 - Amstrad CPC support has been added
