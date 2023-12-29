@@ -1,4 +1,4 @@
-An assembler IDE for 8-bit home computers (currently KC85/3, KC85/4 and C64) with integrated assembler and debugger.
+An assembler IDE for 8-bit home computers (currently KC85/3, KC85/4, C64 and Amstrad CPC) with integrated assembler and debugger.
 
 ## Installation
 
@@ -13,33 +13,25 @@ only exists as pre-release.
 
 ![screenshot-4](/screenshots/vscode-kcide-4.webp)
 
+![screenshot-5](/screenshots/vscode-kcide-5.webp)
+
 ![screenshot-3](/screenshots/vscode-kcide-3.webp)
 
-## KC85 Quickstart
+## Quickstart
 
 With the **pre-release version** of the extension installed:
 
 - clone https://github.com/floooh/kcide-sample
-- open VSCode in the `kcide-sample/kc854` subdirectory
+- open VSCode in one of the following subdirectories:
+  - `kc854/`: for the KC85/4 sample
+  - `c64/`: for the C64 sample
+  - `cpc/`: for the Amstrad CPC sample
 - the extension should detect the `kcide.project.json` file and activate itself
-  (a new tab should open with the embedded KC85/4 emulator)
+  (a new tab should open with the embedded emulator)
 - open the `src/main.asm` file, and hit **F7**, you should see a message
   `Output written to ...`, and a new subdirectory `build/` should have been
-  created with the files `out.hex`, `out.kcc`, `out.lst` and `out.map`
-- with the `src/main` file loaded and active, press **F5** to start a debug session
-- explore additional features by opening the VSCode command palette and typing `kcide`
-
-## C64 Quickstart
-
-With the **pre-release version** of the extension installed:
-
-- clone https://github.com/floooh/kcide-sample
-- open VSCode in the `kcide-sample/c64` subdirectory
-- the extension should detect the `kcide.project.json` file and activate itself
-  (a new tab should open with the embedded C64 emulator)
-- open the `src/main.asm` file, and hit **F7**, you should see a message
-  `Output written to ...`, and a new subdirectory `build/` should have been
-  created with the files `out.hex`, `out.prg`, `out.lst` and `out.map`
+  created with the files `out.hex`, `out.lst` and `out.map`, and a system-specific
+  binary file (`out.kcc`, `out.prg` or `out.bin`)
 - with the `src/main` file loaded and active, press **F5** to start a debug session
 - explore additional features by opening the VSCode command palette and typing `kcide`
 
@@ -125,6 +117,43 @@ debugging UI has a much more powerful memory viewer and editor than what VSCode 
         clc
         adc #6
         rts
+  ```
+
+- test building by pressing **F7** or running the palette command `KCIDE: Build`
+- test debugging by pressing **F5** or running the palette command `KCIDE: Debug`
+- for a more 'idiomatic' C64 PRG sample, check the example project here: https://github.com/floooh/kcide-sample/tree/main/c64
+
+## Starting a new Amstrad CPC project
+
+- create a new project directory and cd into it
+- create a file `project.kcide.json` looking like this, tweak the attributes as needed (the extension provides a JSON schema to VSCode to provide completion and validation):
+
+  ```json
+  {
+      "emulator": {
+          "system": "CPC6128"
+      },
+      "assembler": {
+          "cpu": "Z80",
+          "srcDir": "src",
+          "mainSourceFile": "main.asm",
+          "outDir": "build",
+          "outBaseFilename": "out",
+          "outFiletype": "AMSDOS_BIN"
+      }
+  }
+  ```
+- ...also put the `outDir` value into your `.gitignore`
+- create a directory `src/` and in it a file `main.asm` execution will start
+  at the label `_start`
+
+  ```asm
+      org 4000h
+  _start:
+      ld a,5
+      ld b,6
+      add a,b
+      ret
   ```
 
 - test building by pressing **F7** or running the palette command `KCIDE: Build`

@@ -5,6 +5,14 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Added
+
+- Amstrad CPC support has been added
+
+### Removed
+
+- The palette commands `KCIDE: Run` and `KCIDE: Check` have been removed
+
 ## [1.7.2] - 2023-12-27
 
 ### Changed
