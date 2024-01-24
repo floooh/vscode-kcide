@@ -5,6 +5,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Changed
+
+- Updated emulators to latest versions (no functional changes).
+
 ## [1.8.0] - 2023-12-29
 
 ### Added
