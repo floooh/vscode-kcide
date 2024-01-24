@@ -5,6 +5,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+## [1.8.1] - 2024-01-24
+
 ### Changed
 
 - Updated emulators to latest versions (no functional changes).
