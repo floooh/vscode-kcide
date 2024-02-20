@@ -5,6 +5,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+## [1.8.2] - 2024-02-20
+
 ### Fixed
 
 - Fix an issue where a label at address 0 is ignored, which then may lead
