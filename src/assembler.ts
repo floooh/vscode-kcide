@@ -188,7 +188,7 @@ export async function loadSymbolMap(project: Project): Promise<SymbolMap> {
             } else if (curAddr === undefined) {
                 curAddr = parseInt(token, 16);
             }
-            if (curSymbol && curAddr) {
+            if ((curSymbol !== undefined) && (curAddr !== undefined)) {
                 map[curSymbol] = curAddr;
                 curSymbol = undefined;
                 curAddr = undefined;

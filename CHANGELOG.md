@@ -5,6 +5,12 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix an issue where a label at address 0 is ignored, which then may lead
+  to followup errors like 'Project is missing a '_start' label'.
+  Fixes https://github.com/floooh/vscode-kcide/issues/7.
+
 ## [1.8.1] - 2024-01-24
 
 ### Changed
