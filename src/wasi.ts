@@ -1,4 +1,4 @@
-import { Wasm } from '@vscode/wasm-wasi';
+import { Wasm } from '@vscode/wasm-wasi/v1';
 import { workspace, Uri, ExtensionContext } from 'vscode';
 import { WasiEnv } from './types';
 

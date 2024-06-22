@@ -1,5 +1,5 @@
 import { Uri, Diagnostic } from 'vscode';
-import { RootFileSystem, Wasm } from '@vscode/wasm-wasi';
+import { RootFileSystem, Wasm } from '@vscode/wasm-wasi/v1';
 
 export type WasiEnv = {
     wasm: Wasm,

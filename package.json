@@ -227,7 +227,7 @@
   },
   "dependencies": {
     "@vscode/debugadapter": "^1.64.0",
-    "@vscode/wasm-wasi": "0.13.0-pre.1",
+    "@vscode/wasm-wasi": "^1.0.0-pre.2",
     "await-notify": "^1.0.1",
     "process": "^0.11.10",
     "url": "^0.11.3"
