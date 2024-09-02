@@ -47,7 +47,7 @@
   ],
   "main": "./dist/web/extension.js",
   "browser": "./dist/web/extension.js",
-  "preview": true,
+  "preview": false,
   "contributes": {
     "commands": [
       {
@@ -227,7 +227,7 @@
   },
   "dependencies": {
     "@vscode/debugadapter": "^1.65.0",
-    "@vscode/wasm-wasi": "^1.0.0-pre.2",
+    "@vscode/wasm-wasi": "^1.0.0",
     "await-notify": "^1.0.1",
     "process": "^0.11.10",
     "url": "^0.11.3"
