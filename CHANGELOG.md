@@ -5,6 +5,11 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Changed
+
+- Update the `@vscode/wasm-wasi` extension to 1.0.0, and move the extension
+  out of Preview mode.
+
 ## [1.8.2] - 2024-02-20
 
 ### Fixed
