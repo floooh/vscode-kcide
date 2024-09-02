@@ -5,6 +5,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+## [2.0.0] - 2024-09-02
+
 ### Changed
 
 - Update the `@vscode/wasm-wasi` extension to 1.0.0, and move the extension
