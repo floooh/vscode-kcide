@@ -8,7 +8,7 @@
     },
     "hooks": {
         "before:init": [ "npm run lint" ],
-        "before:release": "npm run publish:pre-release"
+        "before:release": "npm run publish"
     },
     "git": {
         "commitMessage": "release v${version}"

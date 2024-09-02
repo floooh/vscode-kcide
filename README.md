@@ -1,12 +1,5 @@
 An assembler IDE for 8-bit home computers (currently KC85/3, KC85/4, C64 and Amstrad CPC) with integrated assembler and debugger.
 
-## Installation
-
-Please make sure to install the **pre-release** version!
-
-This is currently required because the dependency extension [`ms-vscode.wasm-wasi-core`](https://marketplace.visualstudio.com/items?itemName=ms-vscode.wasm-wasi-core)
-only exists as pre-release.
-
 ## Screenshots
 
 ![screenshot-1](/screenshots/vscode-kcide-1.webp)
@@ -18,8 +11,6 @@ only exists as pre-release.
 ![screenshot-3](/screenshots/vscode-kcide-3.webp)
 
 ## Quickstart
-
-With the **pre-release version** of the extension installed:
 
 - clone https://github.com/floooh/kcide-sample
 - open VSCode in one of the following subdirectories:
