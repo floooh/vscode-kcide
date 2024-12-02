@@ -5,6 +5,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+## [2.1.0] - 2024-12-02
+
 ### Changed
 
 - Change getWorkspaceRelativePath() to only consider the URI path component, this
