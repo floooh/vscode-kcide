@@ -5,6 +5,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Changed
+
+- Update the section about using the extension in VSCode for Web.
+
 ## [2.1.1] - 2024-12-02
 
 ### Changed
