@@ -5,6 +5,11 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Changed
+
+- Change getWorkspaceRelativePath() to only consider the URI path component, this
+  might fix various situations where breakpoints cannot be validated.
+
 ## [2.0.0] - 2024-09-02
 
 ### Changed
