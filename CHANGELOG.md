@@ -5,6 +5,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+## [2.1.3] - 2024-12-02
+
 ### Fixed
 
 - Fixed breakpoint validation on Windows (this was regressed in the last version).
