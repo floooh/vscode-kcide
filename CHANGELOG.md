@@ -5,6 +5,11 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Changed
+
+- In setBreakpointsRequest(), don't assume that the incoming breakpoint location
+  is a file path.
+
 ## [2.1.0] - 2024-12-02
 
 ### Changed
