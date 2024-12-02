@@ -5,6 +5,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+## [2.1.1] - 2024-12-02
+
 ### Changed
 
 - In setBreakpointsRequest(), don't assume that the incoming breakpoint location
