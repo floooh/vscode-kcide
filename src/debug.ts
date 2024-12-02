@@ -494,15 +494,16 @@ export class KCIDEDebugSession extends DebugSession {
 
     private getWorkspaceRelativePath(uri: Uri): string {
         console.log(`KCIDEDebugSession.getWorkspaceRelativePath(${uri})`);
-        const decURI = decodeURIComponent(String(uri));
-        console.log(`KCIDEDebugSession.getWorkspaceRelativePath(): after decode '${decURI}`);
+        const path = uri.path;
+        const rootPath = this.nativeFsRoot.path;
+        console.log(`KCIDEDebugSession.getWorkspaceRelativePath(): path=${path}, rootPath=${rootPath}`);
         // Windows is inconsistant with device letter casing
-        if (decURI.toLowerCase().startsWith(String(this.nativeFsRoot).toLowerCase())) {
-            return decURI.slice(String(this.nativeFsRoot).length + 1);
+        if (path.toLowerCase().startsWith(rootPath.toLowerCase())) {
+            return path.slice(rootPath.length + 1);
         } else {
             // FIXME: should this be a hard error?
-            console.log(`KCIDEDebugSession.getWorkspaceRelativePath(): incoming uri ${decURI} doesn't start with ${this.nativeFsRoot}`);
-            return String(decURI);
+            console.log(`KCIDEDebugSession.getWorkspaceRelativePath(): incoming uri path ${path} doesn't start with ${rootPath}`);
+            return path;
         }
     }
 
