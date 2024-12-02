@@ -10,6 +10,7 @@ An assembler IDE for 8-bit home computers (currently KC85/3, KC85/4, C64 and Ams
 
 ![screenshot-3](/screenshots/vscode-kcide-3.webp)
 
+
 ## Quickstart
 
 - clone https://github.com/floooh/kcide-sample
@@ -172,11 +173,13 @@ The emulator comes with an integrated debugging UI implemented with [Dear ImGui]
 
 ## Running in VSCode for Web
 
-The extension has 'best effort' support for running in the VSCode browser version with the
-following known issues:
+Although not the main focus, the extension also runs in the VSCode web version:
 
-- currently only the Insider version is supported (https://insiders.vscode.dev/)
-- currently only working on local repositories is supported, directly opening
-Github respositories doesn't work
-- starting a debug session for the first time seems to take considerably longer
-than on the desktop VSCode version
+![screenshot-6](/screenshots/vscode-kcide-6.webp)
+
+For example:
+
+- goto https://github.com/floooh/kcide-sample-kc854 and press the '.' (dot) key to start into VSCode for Web
+- after a few seconds a popup should ask for installing recommended extensions
+- once the KC IDE extension is installed, it should activate itself and start the KC85/4 emulator
+- load the main.asm file, and press F5 to start into the debugger
