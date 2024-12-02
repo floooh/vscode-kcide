@@ -190,7 +190,15 @@ export class KCIDEDebugSession extends DebugSession {
         _request?: DebugProtocol.Request | undefined
     ) {
         console.log(`=> KCIDEDebugSession.setBreakpointsRequest: args.source.path=${args.source.path}`);
-        const uri = Uri.parse(args.source.path!, false);
+        // ugly Windows specific hack: if the source path starts with a drive
+        // letter, force file:// URL
+        const p = args.source.path!;
+        let uri;
+        if (p.slice(1).startsWith(':\\')) {
+            uri = Uri.file(p);
+        } else {
+            uri = Uri.parse(p, false);
+        }
         const clearedBreakpoints = this.clearSourceBreakpointsByUri(uri);
         const clientLines = args.breakpoints!.map((bp) => bp.line);
         const debugProtocolBreakpoints = clientLines.map<DebugProtocol.Breakpoint>((l) => {
