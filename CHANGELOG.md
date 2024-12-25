@@ -5,6 +5,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+## [2.2.0] - 2024-12-25
+
 ### Changed
 
 - the emulator debug UI now use the Dear ImGui docking branch and persists the UI layout between sessions
