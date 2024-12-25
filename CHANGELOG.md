@@ -5,6 +5,12 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Changed
+
+- the emulator debug UI now use the Dear ImGui docking branch and persists the UI layout between sessions
+- a teared-off emulator tab is no longer forced back into an embedded tab
+- some code cleanup where rejected debug session promises were not caught
+
 ## [2.1.3] - 2024-12-02
 
 ### Fixed

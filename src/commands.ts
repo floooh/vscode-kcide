@@ -15,7 +15,7 @@ export async function asmBuild(ext: ExtensionContext) {
             window.showErrorMessage(`Build failed with ${result.diagnostics.numErrors} error(s)`);
         }
     } catch (err) {
-        window.showErrorMessage((err as Error).message);
+        window.showErrorMessage(String(err));
     }
 }
 
@@ -30,7 +30,7 @@ export async function asmDebug(ext: ExtensionContext) {
             window.showErrorMessage(`Build failed with ${result.diagnostics.numErrors} error(s)`);
         }
     } catch (err) {
-        window.showErrorMessage((err as Error).message);
+        window.showErrorMessage(String(err));
     }
 }
 
@@ -39,7 +39,7 @@ export async function openEmulator() {
         const project = await loadProject();
         await emu.ensureEmulator(project);
     } catch (err) {
-        window.showErrorMessage((err as Error).message);
+        window.showErrorMessage(String(err));
     }
 }
 
@@ -49,7 +49,7 @@ export async function bootEmulator() {
         await emu.ensureEmulator(project);
         await emu.bootEmulator();
     } catch (err) {
-        window.showErrorMessage((err as Error).message);
+        window.showErrorMessage(String(err));
     }
 }
 
@@ -59,6 +59,6 @@ export async function resetEmulator() {
         await emu.ensureEmulator(project);
         await emu.resetEmulator();
     } catch (err) {
-        window.showErrorMessage((err as Error).message);
+        window.showErrorMessage(String(err));
     }
 }

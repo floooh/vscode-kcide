@@ -33,7 +33,7 @@ export async function activate(ext: vscode.ExtensionContext) {
         // actual extension initialize properly
         await emu.init();
     } catch (err) {
-        vscode.window.showErrorMessage((err as Error).message);
+        vscode.window.showErrorMessage(String(err));
     }
 }
 

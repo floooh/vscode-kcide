@@ -106,7 +106,7 @@ export async function ensureEmulator(project: Project) {
             discardEmulator();
             state = await setupEmulator(project);
         }
-        state.panel.reveal(ViewColumn.Beside, true);
+        state.panel.reveal(undefined, true);
     }
 }
 

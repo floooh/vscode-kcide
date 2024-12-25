@@ -151,7 +151,11 @@ export class KCIDEDebugSession extends DebugSession {
 
     protected async disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments, _request?: DebugProtocol.Request) {
         console.log(`=> KCIDEDebugSession.disconnectRequest suspend: ${args.suspendDebuggee}, terminate: ${args.terminateDebuggee}`);
-        await emu.dbgDisconnect();
+        try {
+            await emu.dbgDisconnect();
+        } catch (err) {
+            vscode.window.showErrorMessage(String(err));
+        }
         this.sendResponse(response);
     }
 
@@ -190,28 +194,32 @@ export class KCIDEDebugSession extends DebugSession {
         _request?: DebugProtocol.Request | undefined
     ) {
         console.log(`=> KCIDEDebugSession.setBreakpointsRequest: args.source.path=${args.source.path}`);
-        // ugly Windows specific hack: if the source path starts with a drive
-        // letter, force file:// URL
-        const p = args.source.path!;
-        let uri;
-        if (p.slice(1).startsWith(':\\')) {
-            uri = Uri.file(p);
-        } else {
-            uri = Uri.parse(p, false);
+        try {
+            // ugly Windows specific hack: if the source path starts with a drive
+            // letter, force file:// URL
+            const p = args.source.path!;
+            let uri;
+            if (p.slice(1).startsWith(':\\')) {
+                uri = Uri.file(p);
+            } else {
+                uri = Uri.parse(p, false);
+            }
+            const clearedBreakpoints = this.clearSourceBreakpointsByUri(uri);
+            const clientLines = args.breakpoints!.map((bp) => bp.line);
+            const debugProtocolBreakpoints = clientLines.map<DebugProtocol.Breakpoint>((l) => {
+                const bp = this.addSourceBreakpoint(uri, l);
+                const source = this.sourceFromUri(bp.uri);
+                const protocolBreakpoint = new Breakpoint(bp.verified, bp.line, 0, source) as DebugProtocol.Breakpoint;
+                protocolBreakpoint.id = bp.id;
+                return bp;
+            });
+            response.body = { breakpoints: debugProtocolBreakpoints };
+            const removeAddrs = clearedBreakpoints.filter((bp) => (bp.addr !== undefined)).map((bp) => bp.addr!);
+            const addAddrs = this.getSourceBreakpointsByUri(uri).filter((bp) => (bp.addr !== undefined)).map((bp) => bp.addr!);
+            await emu.dbgUpdateBreakpoints(removeAddrs, addAddrs);
+        } catch(err) {
+            vscode.window.showErrorMessage(String(err));
         }
-        const clearedBreakpoints = this.clearSourceBreakpointsByUri(uri);
-        const clientLines = args.breakpoints!.map((bp) => bp.line);
-        const debugProtocolBreakpoints = clientLines.map<DebugProtocol.Breakpoint>((l) => {
-            const bp = this.addSourceBreakpoint(uri, l);
-            const source = this.sourceFromUri(bp.uri);
-            const protocolBreakpoint = new Breakpoint(bp.verified, bp.line, 0, source) as DebugProtocol.Breakpoint;
-            protocolBreakpoint.id = bp.id;
-            return bp;
-        });
-        response.body = { breakpoints: debugProtocolBreakpoints };
-        const removeAddrs = clearedBreakpoints.filter((bp) => (bp.addr !== undefined)).map((bp) => bp.addr!);
-        const addAddrs = this.getSourceBreakpointsByUri(uri).filter((bp) => (bp.addr !== undefined)).map((bp) => bp.addr!);
-        await emu.dbgUpdateBreakpoints(removeAddrs, addAddrs);
         this.sendResponse(response);
     }
 
@@ -221,21 +229,25 @@ export class KCIDEDebugSession extends DebugSession {
         _request?: DebugProtocol.Request | undefined
     ) {
         console.log('=> KCIDEDebugSession.setInstructionBreakpointsRequest');
-        const clearedBreakpoints = this.clearInstructionBreakpoints();
-        const debugProtocolBreakpoints = args.breakpoints.map((ibp) => {
-            const bp = this.addInstructionBreakpoint(ibp.instructionReference, ibp.offset ?? 0);
-            const source = this.sourceFromUriOptional(bp.uri);
-            const protocolBreakpoint = new Breakpoint(true, bp.line, 0, source) as DebugProtocol.Breakpoint;
-            protocolBreakpoint.id = bp.id;
-            if (bp.addr !== undefined) {
-                protocolBreakpoint.instructionReference = toUint16String(bp.addr);
-            }
-            return protocolBreakpoint;
-        });
-        response.body = { breakpoints: debugProtocolBreakpoints };
-        const removeAddrs = clearedBreakpoints.filter((bp) => (bp.addr !== 0)).map((bp) => bp.addr!);
-        const addAddrs = this.instrBreakpoints.map((bp) => bp.addr!);
-        await emu.dbgUpdateBreakpoints(removeAddrs, addAddrs);
+        try {
+            const clearedBreakpoints = this.clearInstructionBreakpoints();
+            const debugProtocolBreakpoints = args.breakpoints.map((ibp) => {
+                const bp = this.addInstructionBreakpoint(ibp.instructionReference, ibp.offset ?? 0);
+                const source = this.sourceFromUriOptional(bp.uri);
+                const protocolBreakpoint = new Breakpoint(true, bp.line, 0, source) as DebugProtocol.Breakpoint;
+                protocolBreakpoint.id = bp.id;
+                if (bp.addr !== undefined) {
+                    protocolBreakpoint.instructionReference = toUint16String(bp.addr);
+                }
+                return protocolBreakpoint;
+            });
+            response.body = { breakpoints: debugProtocolBreakpoints };
+            const removeAddrs = clearedBreakpoints.filter((bp) => (bp.addr !== 0)).map((bp) => bp.addr!);
+            const addAddrs = this.instrBreakpoints.map((bp) => bp.addr!);
+            await emu.dbgUpdateBreakpoints(removeAddrs, addAddrs);
+        } catch (err) {
+            vscode.window.showErrorMessage(String(err));
+        }
         this.sendResponse(response);
     }
 
@@ -245,19 +257,31 @@ export class KCIDEDebugSession extends DebugSession {
         _request?: DebugProtocol.Request | undefined
     ) {
         console.log('=> KCIDEDebugSession.pauseRequest');
-        await emu.dbgPause();
+        try {
+            await emu.dbgPause();
+        } catch (err) {
+            vscode.window.showErrorMessage(String(err));
+        }
         this.sendResponse(response);
     }
 
     protected async continueRequest(response: DebugProtocol.ContinueResponse, _args: DebugProtocol.ContinueArguments) {
         console.log('=> KCIDEDebugSession.continueRequest');
-        await emu.dbgContinue();
+        try {
+            await emu.dbgContinue();
+        } catch (err) {
+            vscode.window.showErrorMessage(String(err));
+        }
         this.sendResponse(response);
     }
 
     protected async nextRequest(response: DebugProtocol.NextResponse, _args: DebugProtocol.NextArguments) {
         console.log('=> KCIDEDebugSession.nextRequest');
-        await emu.dbgStep();
+        try {
+            await emu.dbgStep();
+        } catch (err) {
+            vscode.window.showErrorMessage(String(err));
+        }
         this.sendResponse(response);
     }
 
@@ -267,14 +291,22 @@ export class KCIDEDebugSession extends DebugSession {
         _request?: DebugProtocol.Request | undefined
     ) {
         console.log('=> KCIDEDebusSession.stepInRequest');
-        await emu.dbgStepIn();
+        try {
+            await emu.dbgStepIn();
+        } catch (err) {
+            vscode.window.showErrorMessage(String(err));
+        }
         this.sendResponse(response);
     }
 
     protected async stepOutRequest(response: DebugProtocol.StepOutResponse, _args: DebugProtocol.StepOutArguments) {
         console.log('=> KCIDEDebugSession.stepOutRequest');
-        // FIXME: stepOut is not implemented, just do a regular step instead
-        await emu.dbgStep();
+        try {
+            // FIXME: stepOut is not implemented, just do a regular step instead
+            await emu.dbgStep();
+        } catch (err) {
+            vscode.window.showErrorMessage(String(err));
+        }
         this.sendResponse(response);
     }
 
