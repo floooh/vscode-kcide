@@ -5,6 +5,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+## [2.2.1] - 2025-02-09
+
 ### Changed
 
 - update the embedded asmx.wasm to the latest version (see: https://github.com/floooh/easmx/pull/1)
