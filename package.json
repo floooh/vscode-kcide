@@ -212,6 +212,7 @@
     "@release-it/keep-a-changelog": "^8.0.1",
     "@types/node": "^26.6.6",
     "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^4.1.0",
     "oxlint": "^1.90.0",
     "release-it": "^21.1.2",
     "rimraf": "^6.1.3",

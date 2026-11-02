@@ -5,6 +5,17 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Changed
+
+- update the embedded emulators to the latest versions
+- internal: update project scaffolding to Vite, Vitest,
+  oxlint and TypeScript 7
+
+### Fixed
+
+- README.md: fix project filenames to `kcide.project.json`
+  (see: https://github.com/floooh/vscode-kcide/issues/13)
+
 ## [2.2.1] - 2025-02-09
 
 ### Changed

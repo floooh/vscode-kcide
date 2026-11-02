@@ -45,7 +45,7 @@ debugging UI has a much more powerful memory viewer and editor than what VSCode 
 ## Starting a new KC85 project
 
 - create a new project directory and cd into it
-- create a file `project.kcide.json` looking like this, tweak the attributes as needed (the extension provides a JSON schema to VSCode to provide completion and validation):
+- create a file `kcide.project.json` looking like this, tweak the attributes as needed (the extension provides a JSON schema to VSCode to provide completion and validation):
 
   ```json
   {
@@ -81,7 +81,7 @@ debugging UI has a much more powerful memory viewer and editor than what VSCode 
 ## Starting a new C64 project
 
 - create a new project directory and cd into it
-- create a file `project.kcide.json` looking like this, tweak the attributes as needed (the extension provides a JSON schema to VSCode to provide completion and validation):
+- create a file `kcide.project.json` looking like this, tweak the attributes as needed (the extension provides a JSON schema to VSCode to provide completion and validation):
 
   ```json
   {
@@ -118,7 +118,7 @@ debugging UI has a much more powerful memory viewer and editor than what VSCode 
 ## Starting a new Amstrad CPC project
 
 - create a new project directory and cd into it
-- create a file `project.kcide.json` looking like this, tweak the attributes as needed (the extension provides a JSON schema to VSCode to provide completion and validation):
+- create a file `kcide.project.json` looking like this, tweak the attributes as needed (the extension provides a JSON schema to VSCode to provide completion and validation):
 
   ```json
   {
