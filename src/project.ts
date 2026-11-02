@@ -56,7 +56,7 @@ export async function loadProject(): Promise<Project> {
             emulator: { system },
             assembler: { srcDir, mainSourceFile, cpu, outDir, outBaseFilename, outFiletype },
         };
-    } catch (err) {
+    } catch {
         // no or invalid kcide.project.json: return default project settings
         window.showWarningMessage('Please create a kcide.project.json file!');
         return { uri: projectUri, ...projectDefaults };

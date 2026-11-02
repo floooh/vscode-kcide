@@ -20,7 +20,7 @@ import * as vscode from 'vscode';
 // @ts-ignore
 import { Subject } from 'await-notify';
 import { CPU, SourceMap } from './types';
-import { readBinaryFile, readTextFile, getOutputMapFileUri, getOutputBinFileUri } from './filesystem';
+import { readBinaryFile, getOutputBinFileUri } from './filesystem';
 import { loadProject, requireProjectUri } from './project';
 import { loadSourceMap } from './assembler';
 import * as emu from './emu';
@@ -470,7 +470,7 @@ export class KCIDEDebugSession extends DebugSession {
             } else {
                 response.body = { variables: [] };
             }
-        } catch (err) {
+        } catch {
             response.body = { variables: [] };
         }
         this.sendResponse(response);

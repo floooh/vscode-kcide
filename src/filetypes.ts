@@ -1,6 +1,5 @@
 // see: https://en.wikipedia.org/wiki/Intel_HEX
-import { Project, FileType } from './types';
-
+import { FileType } from './types';
 
 function findMinMaxAddr(lines: string[]): { minAddr: number, maxAddr: number } {
     let minAddr = 0xFFFF;

@@ -16,7 +16,7 @@ export async function uriToWasmPath(ext: ExtensionContext, uri: Uri): Promise<st
 export async function fileExists(uri: Uri): Promise<boolean> {
     try {
         return (await workspace.fs.stat(uri)).type === VSCodeFileType.File;
-    } catch (err) {
+    } catch {
         return false;
     }
 }
@@ -24,7 +24,7 @@ export async function fileExists(uri: Uri): Promise<boolean> {
 export async function dirExists(uri: Uri): Promise<boolean> {
     try {
         return (await workspace.fs.stat(uri)).type === VSCodeFileType.Directory;
-    } catch (err) {
+    } catch {
         return false;
     }
 }

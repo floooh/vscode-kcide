@@ -4,4 +4,4 @@ out/
 src/
 dist/**/*.js.map
 tsconfig.json
-webpack.config.js
+vite.config.mts

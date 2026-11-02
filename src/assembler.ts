@@ -83,15 +83,15 @@ export async function assemble(ext: ExtensionContext, project: Project, options:
     }
     const lstUri = getOutputListFileUri(project);
     if (genListingFile) {
-        try { await workspace.fs.delete(lstUri); } catch (err) {};
+        try { await workspace.fs.delete(lstUri); } catch {};
     }
     const mapUri = getOutputMapFileUri(project);
     if (genMapFile) {
-        try { await workspace.fs.delete(mapUri); } catch (err) {};
+        try { await workspace.fs.delete(mapUri); } catch {};
     }
     const objUri = getOutputObjectFileUri(project);
     if (genObjectFile) {
-        try { await workspace.fs.delete(objUri); } catch (err) {};
+        try { await workspace.fs.delete(objUri); } catch {};
     }
     const [ wasmSrcDir, wasmMainSrcPath, wasmObjPath, wasmLstPath, wasmMapPath ] = await Promise.all([
         uriToWasmPath(ext, srcDirUri),

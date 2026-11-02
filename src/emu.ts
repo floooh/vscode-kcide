@@ -5,7 +5,7 @@ import {
     Uri,
 } from 'vscode';
 import { KCIDEDebugSession } from './debug';
-import { System, Project, CPUState, DisasmLine, FileType } from './types';
+import { System, Project, CPUState, DisasmLine } from './types';
 import { readTextFile, getExtensionUri } from './filesystem';
 import { loadProject } from './project';
 import { loadSymbolMap } from './assembler';

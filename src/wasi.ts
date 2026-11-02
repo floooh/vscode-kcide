@@ -9,7 +9,7 @@ export async function requireWasiEnv(ext: ExtensionContext): Promise<WasiEnv> {
         const wasm = await Wasm.load();
         const fs = await wasm.createRootFileSystem([ { kind: 'workspaceFolder' } ]);
         const bits = await workspace.fs.readFile(Uri.joinPath(ext.extensionUri, 'media/asmx.wasm'));
-        const asmx = await WebAssembly.compile(bits);
+        const asmx = await WebAssembly.compile(bits as Uint8Array<ArrayBuffer>);
         wasiEnv = { wasm, fs, asmx };
     }
     return wasiEnv;
