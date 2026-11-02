@@ -5,6 +5,8 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+## [2.3.1] - 2026-11-02
+
 ### Changed
 
 - switch to 'trusted publishing' via Github CI
