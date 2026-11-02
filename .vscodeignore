@@ -5,3 +5,4 @@ src/
 dist/**/*.js.map
 tsconfig.json
 vite.config.mts
+.github
