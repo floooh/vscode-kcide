@@ -5,6 +5,10 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
+### Changed
+
+- updated emulators to their latest version (mainly improved C64 VIC-II precision)
+
 ## [2.3.1] - 2026-11-02
 
 ### Changed
